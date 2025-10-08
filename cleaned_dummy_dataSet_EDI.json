@@ -1,0 +1,93 @@
+{
+  "Company": [
+    {
+      "id": "bata",
+      "name": "Bata India",
+      "description": "India's largest footwear retailer and manufacturer with 85+ years of legacy",
+      "industry": "SHOES",
+      "instagram": "452000",
+      "twitter": "98000",
+      "facebook": "2100000",
+      "growthTrends": "Consistent 8-10% YoY growth in retail segment",
+      "topPosts": "Sneaker launches, festive collections"
+    },
+    // ... (other companies: relaxo, metro_brands, campus, liberty, titan, timex, casio, fossil, maxima, park_avenue, wild_stone, engage, fogg, ajmal)
+  ],
+  "Overview": [
+    {
+      "id": "overview_bata",
+      "summary": "Bata India operates 1500+ stores across India, serving millions of customers with affordable and stylish footwear",
+      "instaFollowers": 452000,
+      "companyId": "bata"
+    },
+    // ... (other overviews)
+  ],
+  "BusinessModel": [
+    {
+      "id": "bm_bata",
+      "revenueStreams": [
+        "Retail stores sales",
+        "Online sales",
+        "B2B institutional sales"
+      ],
+      "keyPartnerships": [
+        "Shopping malls",
+        "E-commerce platforms",
+        "Raw material suppliers"
+      ],
+      "costStructure": [
+        "Manufacturing costs",
+        "Store rentals",
+        "Marketing expenses"
+      ],
+      "companyId": "bata"
+    },
+    // ... (other business models)
+  ],
+  "Product": [
+    {
+      "id": "bata_p1",
+      "name": "Bata Power Sports Shoes",
+      "description": "Premium sports shoes with cushioned sole",
+      "pricing": 2999,
+      "keyFeatures": [
+        "Memory foam insole",
+        "Breathable mesh",
+        "Anti-slip sole"
+      ],
+      "productLinks": [
+        "www.bata.in/power-sports"
+      ],
+      "companyId": "bata"
+    },
+    // ... (other products)
+  ],
+  "Revenue": [
+    {
+      "id": "bata_rev_2023",
+      "revenue": 3200,
+      "grossProfit": 1280,
+      "netProfit": 180,
+      "grossMargin": 40,
+      "netMargin": 5.6,
+      "marketCap": 9800,
+      "websiteVisits": 2500000,
+      "quarter": 4,
+      "year": 2023,
+      "companyId": "bata"
+    },
+    // ... (other revenue entries)
+  ],
+  "News": [
+    {
+      "id": "news_titan_1",
+      "title": "Titan launches new smartwatch series",
+      "description": "Titan Company unveils its latest smartwatch collection targeting fitness enthusiasts",
+      "sourceLink": "www.example.com/titan-smartwatch",
+      "date": "2024-09-15",
+      "priority": "HIGH",
+      "companyId": "titan"
+    },
+    // ... (other news entries)
+  ]
+}

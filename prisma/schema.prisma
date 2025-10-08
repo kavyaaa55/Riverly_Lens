@@ -1,184 +1,412 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
+// Generator and datasource
 generator client {
   provider = "prisma-client-js"
 }
 
-// Your existing enums
-enum CompanyType {
-  SHOES
-  WATCH
-  PERFUMES
-  GENERAL
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
 }
 
-enum NewsPriority {
+// Enums
+enum CompanyType {
+  B2B
+  B2C
+  MIXED
+  OTHER
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  TWITTER
+}
+
+enum PeriodType {
+  MONTH
+  QUARTER
+  YEAR
+}
+
+enum GrowthMetricType {
+  MOM
+  YOY
+}
+
+enum RevenueBreakdownType {
+  PRODUCT
+  SOURCE
+}
+
+enum PressPriority {
   LOW
   MEDIUM
   HIGH
 }
 
-// MODIFIED User model for NextAuth
+enum RevenueStream {
+  SUBSCRIPTION
+  ONE_TIME
+  FREEMIUM
+  ADS
+  LICENSING
+}
+
+enum SalesChannel {
+  WEBSITE
+  APP
+  RESELLERS
+  DISTRIBUTORS
+  OFFLINE
+}
+
+enum AcquisitionChannel {
+  ADS
+  SEO
+  REFERRALS
+  SOCIAL
+  PARTNERSHIPS
+  EMAIL
+  EVENTS
+}
+
+enum ReviewSource {
+  AMAZON
+  OTHER
+}
+
+// Users and tracking (weekly emails, settings, tracked companies)
 model User {
-  id            String      @id @default(cuid())
-  name          String?
-  email         String?     @unique
-  emailVerified DateTime?
-  image         String?
-  password      String? // Keep for credentials provider, optional for OAuth
-  description   String?
-  companyType   CompanyType @default(GENERAL)
-  payment       String?
-  signupDate    DateTime?   @default(now())
-
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id])
-
-  // NextAuth-required relations
-  accounts Account[]
-  sessions Session[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String        @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String        @unique
+  passwordHash       String
+  companyType        CompanyType?
+  userCompanyName    String?
+  weeklyEmailEnabled Boolean       @default(true)
+  lastWeeklyEmailAt  DateTime?
+  trackedCompanies   UserCompany[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 }
 
-// NEW model for NextAuth
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-// NEW model for NextAuth
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// NEW model for NextAuth
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-// Your existing models (no changes needed)
 model Company {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  description   String
-  industry      String
-  instagram     String?
-  twitter       String?
-  facebook      String?
-  growthTrends  String?
-  topPosts      String?
-  users         User[]
-  products      Product[]
-  news          News[]
-  revenues      Revenue[]
-  businessModel BusinessModel?
-  overview      Overview?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                String                @id @default(cuid())
+  name              String                @unique
+  logoUrl           String?
+  description       String?
+  type              CompanyType?
+  socialAccounts    SocialAccount[]
+  audience          AudienceDemographics?
+  pressReleases     PressRelease[]
+  reports           Report[]
+  products          Product[]
+  revenueRecords    RevenueRecord[]
+  salesVolumes      SalesVolumeRecord[]
+  revenueBreakdowns RevenueBreakdown[]
+  geoSales          GeoSalesShare[]
+  growthMetrics     GrowthMetric[]
+  customerMetrics   CustomerMetric[]
+  profitability     ProfitabilityRecord[]
+  businessModel     BusinessModel?
+  trackedByUsers    UserCompany[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 }
 
-model Product {
-  id           String    @id @default(cuid())
-  name         String
-  description  String
-  pricing      Decimal
-  keyFeatures  String[]
-  productLinks String[]
-  companyId    String
-  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  aiReport     AIReport?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+// explicit m-n for tracking
+model UserCompany {
+  userId    String
+  companyId String
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+  @@index([companyId])
 }
 
-model News {
-  id          String       @id @default(cuid())
-  title       String
-  description String
-  sourceLink  String
-  date        DateTime
-  priority    NewsPriority @default(MEDIUM)
-  companyId   String
-  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+// Social media + history + top posts + audience
+model SocialAccount {
+  id                String                   @id @default(cuid())
+  companyId         String
+  platform          SocialPlatform
+  handle            String?
+  url               String?
+  followers         Int?
+  company           Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  followerSnapshots SocialFollowerSnapshot[]
+  topPosts          SocialTopPost[]
+
+  @@unique([companyId, platform])
+  @@index([companyId, platform])
 }
 
-model Revenue {
-  id            String   @id @default(cuid())
-  revenue       Decimal
-  grossProfit   Decimal?
-  netProfit     Decimal?
-  grossMargin   Decimal?
-  netMargin     Decimal?
-  marketCap     Decimal?
-  websiteVisits Int?
-  quarter       Int
-  year          Int
-  companyId     String
-  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@unique([companyId, quarter, year])
-}
-
-model BusinessModel {
+model SocialFollowerSnapshot {
   id              String   @id @default(cuid())
-  revenueStreams  String[]
-  keyPartnerships String[]
-  costStructure   String[]
-  pieChart        Json?
-  companyId       String   @unique
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  socialAccountId String
+  date            DateTime
+  count           Int
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId, date])
 }
 
-model AIReport {
-  id          String   @id @default(cuid())
-  strength    String
-  weakness    String
-  opportunity String
-  productId   String   @unique
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model SocialTopPost {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  title           String
+  link            String
+  postedAt        DateTime
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@index([socialAccountId, postedAt])
 }
 
-model Overview {
-  id             String   @id @default(cuid())
-  summary        String
-  instaFollowers Int
-  companyId      String   @unique
-  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model AudienceDemographics {
+  id         String @id @default(cuid())
+  companyId  String @unique
+  // JSONB aggregates: age buckets, gender split, locations
+  ageBuckets Json?
+  gender     Json?
+  locations  Json?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+// Press releases
+model PressRelease {
+  id          String        @id @default(cuid())
+  companyId   String
+  title       String
+  aiSummary   String?
+  sourceUrl   String
+  publishedAt DateTime
+  priority    PressPriority @default(MEDIUM)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, publishedAt])
+}
+
+// News reports (Recent Activity)
+model Report {
+  id           String         @id @default(cuid())
+  companyId    String
+  title        String
+  summary      String? // AI summary of the exact update
+  marketImpact String? // AI-generated market impact
+  reportedAt   DateTime
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sources      ReportSource[]
+  topics       ReportTopic[]
+
+  @@index([companyId, reportedAt])
+}
+
+model ReportSource {
+  id       String @id @default(cuid())
+  reportId String
+  url      String
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, url])
+  @@index([reportId])
+}
+
+// Topics to power "Top topic" in sidebar
+model Topic {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  reportLinks ReportTopic[]
+}
+
+model ReportTopic {
+  reportId String
+  topicId  String
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  topic  Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([reportId, topicId])
+}
+
+// Sales and Revenue
+model RevenueRecord {
+  id          String     @id @default(cuid())
+  companyId   String
+  periodType  PeriodType
+  periodStart DateTime
+  periodEnd   DateTime
+  amount      Decimal    @db.Decimal(20, 2)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, periodStart, periodEnd])
+}
+
+model SalesVolumeRecord {
+  id          String     @id @default(cuid())
+  companyId   String
+  periodType  PeriodType
+  periodStart DateTime
+  periodEnd   DateTime
+  units       Int
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, periodStart, periodEnd])
+}
+
+model RevenueBreakdown {
+  id          String               @id @default(cuid())
+  companyId   String
+  periodType  PeriodType
+  periodStart DateTime
+  periodEnd   DateTime
+  kind        RevenueBreakdownType
+  label       String // product name or source label
+  amount      Decimal              @db.Decimal(20, 2)
+  productId   String?
+
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@index([companyId, periodStart, periodEnd])
+}
+
+model GeoSalesShare {
+  id          String     @id @default(cuid())
+  companyId   String
+  periodType  PeriodType
+  periodStart DateTime
+  periodEnd   DateTime
+  place       String
+  percent     Decimal    @db.Decimal(5, 2)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, periodStart, periodEnd, place])
+  @@index([companyId, periodStart, periodEnd])
+}
+
+model GrowthMetric {
+  id        String           @id @default(cuid())
+  companyId String
+  metric    GrowthMetricType
+  date      DateTime
+  valuePct  Decimal          @db.Decimal(7, 4) // 0.1525 = 15.25%
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, metric, date])
+}
+
+model CustomerMetric {
+  id           String   @id @default(cuid())
+  companyId    String
+  date         DateTime
+  aov          Decimal? @db.Decimal(12, 2)
+  retentionPct Decimal? @db.Decimal(5, 2)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+}
+
+model ProfitabilityRecord {
+  id              String     @id @default(cuid())
+  companyId       String
+  periodType      PeriodType
+  periodStart     DateTime
+  periodEnd       DateTime
+  grossMarginPct  Decimal?   @db.Decimal(5, 2)
+  netMarginPct    Decimal?   @db.Decimal(5, 2)
+  ebitdaMarginPct Decimal?   @db.Decimal(5, 2)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, periodStart, periodEnd])
+}
+
+// Business model
+model BusinessModel {
+  id               String  @id @default(cuid())
+  companyId        String  @unique
+  valueProp        String?
+  whyChooseUs      String?
+  keyPartners      String?
+  costStructure    String?
+  customerSegments String?
+
+  company             Company                      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  revenueStreams      BusinessModelRevenueStream[]
+  acquisitionChannels CompanyAcquisitionChannel[]
+  salesChannels       CompanySalesChannel[]
+}
+
+model BusinessModelRevenueStream {
+  businessModelId String
+  stream          RevenueStream
+
+  businessModel BusinessModel @relation(fields: [businessModelId], references: [id], onDelete: Cascade)
+
+  @@id([businessModelId, stream])
+}
+
+model CompanyAcquisitionChannel {
+  businessModelId String
+  channel         AcquisitionChannel
+
+  businessModel BusinessModel @relation(fields: [businessModelId], references: [id], onDelete: Cascade)
+
+  @@id([businessModelId, channel])
+}
+
+model CompanySalesChannel {
+  businessModelId String
+  channel         SalesChannel
+
+  businessModel BusinessModel @relation(fields: [businessModelId], references: [id], onDelete: Cascade)
+
+  @@id([businessModelId, channel])
+}
+
+// Products + insights
+model Product {
+  id          String    @id @default(cuid())
+  companyId   String
+  name        String
+  imageUrl    String?
+  releaseDate DateTime?
+  productUrl  String?
+  description String?
+
+  company          Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  insights         ProductInsight[]
+  RevenueBreakdown RevenueBreakdown[]
+
+  @@unique([companyId, name])
+  @@index([companyId, releaseDate])
+}
+
+model ProductInsight {
+  id              String        @id @default(cuid())
+  productId       String
+  source          ReviewSource?
+  starsOutOf5     Decimal?      @db.Decimal(3, 2)
+  likesSummary    String?
+  dislikesSummary String?
+  capturedAt      DateTime      @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, capturedAt])
 }

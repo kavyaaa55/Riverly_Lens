@@ -1,0 +1,401 @@
+{
+  "companies": [
+    {
+      "id": "bata",
+      "name": "Bata India",
+      "description": "Bata India is a leading footwear retail brand in India, known for its wide range of shoes for all demographics. Headquartered in Gurgaon, Haryana, it is recognized for quality, comfort, and accessibility in both urban and rural markets.",
+      "industry": "Footwear",
+      "scaleCategory": "large",
+      "marketCap": {
+        "value": 25000,
+        "unit": "INR crores"
+      },
+      "overview": {
+        "summary": "Bata is one of India's largest footwear retailers, offering a wide range of shoes across demographics.",
+        "founded": 1931,
+        "headquarters": "Gurgaon, Haryana",
+        "instaFollowers": 0
+      },
+      "businessModel": {
+        "revenueStreams": [
+          "Retail sales",
+          "Wholesale",
+          "Online sales"
+        ],
+        "keyPartnerships": [],
+        "costStructure": [],
+        "pieChart": null
+      },
+      "products": [
+        {
+          "id": "bata_p1",
+          "name": "Bata Comfit",
+          "description": "Comfortable casual footwear with cushioned soles, durable material, and multiple color options.",
+          "pricing": 1499,
+          "keyFeatures": [
+            "Cushioned soles",
+            "Durable material",
+            "Multiple colors"
+          ],
+          "productLinks": [
+            "https://www.bata.in/comfit"
+          ]
+        },
+        {
+          "id": "bata_p2",
+          "name": "Bata Power",
+          "description": "Lightweight sports shoes with shock absorption and stylish design.",
+          "pricing": 2499,
+          "keyFeatures": [
+            "Lightweight",
+            "Shock absorption",
+            "Stylish design"
+          ],
+          "productLinks": [
+            "https://www.bata.in/power"
+          ]
+        },
+        {
+          "id": "bata_p3",
+          "name": "Bata Formal",
+          "description": "Premium leather formal shoes with slip-resistant soles and classic design.",
+          "pricing": 3499,
+          "keyFeatures": [
+            "Premium leather",
+            "Slip resistant",
+            "Classic design"
+          ],
+          "productLinks": [
+            "https://www.bata.in/formal"
+          ]
+        }
+      ],
+      "news": [
+        {
+          "title": "Bata Expands Retail Presence",
+          "description": "Bata India announces expansion into 100 new towns across India.",
+          "sourceLink": "https://www.bata.in/news/expansion",
+          "date": "2025-01-01T00:00:00Z",
+          "priority": "MEDIUM"
+        }
+      ],
+      "revenue": {
+        "revenue": 3500,
+        "grossProfit": null,
+        "netProfit": null,
+        "grossMargin": null,
+        "netMargin": null,
+        "marketCap": 25000,
+        "websiteVisits": null,
+        "quarter": 1,
+        "year": 2025
+      }
+    },
+    {
+      "id": "relaxo",
+      "name": "Relaxo Footwear",
+      "description": "Relaxo Footwear is a leading Indian manufacturer of affordable and durable footwear, popular among budget-conscious consumers across the country.",
+      "industry": "Footwear",
+      "scaleCategory": "large",
+      "marketCap": {
+        "value": 20000,
+        "unit": "INR crores"
+      },
+      "overview": {
+        "summary": "Relaxo is known for affordable and durable footwear across India.",
+        "founded": 1984,
+        "headquarters": "New Delhi, India",
+        "instaFollowers": 0
+      },
+      "businessModel": {
+        "revenueStreams": [
+          "Retail sales",
+          "Online sales",
+          "Exports"
+        ],
+        "keyPartnerships": [],
+        "costStructure": [],
+        "pieChart": null
+      },
+      "products": [
+        {
+          "id": "relaxo_p1",
+          "name": "Relaxo Hawaii",
+          "description": "Waterproof slippers made from durable rubber, popular for their affordability.",
+          "pricing": 149,
+          "keyFeatures": [
+            "Waterproof",
+            "Durable rubber",
+            "Affordable"
+          ],
+          "productLinks": [
+            "https://www.relaxofootwear.com/hawaii"
+          ]
+        },
+        {
+          "id": "relaxo_p2",
+          "name": "Relaxo Flite",
+          "description": "Lightweight casual sandals with a stylish design and comfort fit.",
+          "pricing": 499,
+          "keyFeatures": [
+            "Lightweight",
+            "Stylish design",
+            "Comfort fit"
+          ],
+          "productLinks": [
+            "https://www.relaxofootwear.com/flite"
+          ]
+        },
+        {
+          "id": "relaxo_p3",
+          "name": "Relaxo Sparx",
+          "description": "Affordable sports shoes with a sporty design and durable build.",
+          "pricing": 1299,
+          "keyFeatures": [
+            "Sporty design",
+            "Affordable",
+            "Durable"
+          ],
+          "productLinks": [
+            "https://www.relaxofootwear.com/sparx"
+          ]
+        }
+      ],
+      "news": [
+        {
+          "title": "Relaxo Launches New Online Store",
+          "description": "Relaxo Footwear launches a new e-commerce platform to reach more customers.",
+          "sourceLink": "https://www.relaxofootwear.com/news/ecommerce",
+          "date": "2025-01-01T00:00:00Z",
+          "priority": "MEDIUM"
+        }
+      ],
+      "revenue": {
+        "revenue": 2500,
+        "grossProfit": null,
+        "netProfit": null,
+        "grossMargin": null,
+        "netMargin": null,
+        "marketCap": 20000,
+        "websiteVisits": null,
+        "quarter": 1,
+        "year": 2025
+      }
+    },
+    {
+      "id": "titan",
+      "name": "Titan Company",
+      "description": "Titan Company is India's leading watchmaker and jewelery brand, part of the Tata Group, known for premium and luxury products across various categories.",
+      "industry": "Watches",
+      "scaleCategory": "large",
+      "marketCap": {
+        "value": 285000,
+        "unit": "INR crores"
+      },
+      "overview": {
+        "summary": "Titan is India's largest watchmaker, part of Tata Group, also into jewellery and eyewear.",
+        "founded": 1984,
+        "headquarters": "Bengaluru, Karnataka",
+        "instaFollowers": 0
+      },
+      "businessModel": {
+        "revenueStreams": [
+          "Watch sales",
+          "Smartwatches",
+          "Luxury watches"
+        ],
+        "keyPartnerships": [],
+        "costStructure": [],
+        "pieChart": null
+      },
+      "products": [
+        {
+          "id": "titan_p1",
+          "name": "Titan Edge",
+          "description": "Ultra-slim premium analog watch with scratch-resistant glass and waterproof design.",
+          "pricing": 19999,
+          "keyFeatures": [
+            "Ultra-slim design",
+            "Scratch resistant",
+            "Waterproof"
+          ],
+          "productLinks": [
+            "https://www.titan.co.in/edge"
+          ]
+        },
+        {
+          "id": "titan_p2",
+          "name": "Titan Smart",
+          "description": "Smartwatch with fitness tracking, notification alerts, and water resistance.",
+          "pricing": 12999,
+          "keyFeatures": [
+            "Fitness tracking",
+            "Notification alerts",
+            "Water resistant"
+          ],
+          "productLinks": [
+            "https://www.titan.co.in/smart"
+          ]
+        },
+        {
+          "id": "titan_p3",
+          "name": "Fastrack Reflex",
+          "description": "Youth-focused smart band with heart rate monitor, steps counter, and Bluetooth connectivity.",
+          "pricing": 4999,
+          "keyFeatures": [
+            "Heart rate monitor",
+            "Steps counter",
+            "Bluetooth"
+          ],
+          "productLinks": [
+            "https://www.fastrack.in/reflex"
+          ]
+        }
+      ],
+      "news": [
+        {
+          "title": "Titan Introduces New Smartwatch Series",
+          "description": "Titan announces a new lineup of smartwatches with advanced features.",
+          "sourceLink": "https://www.titan.co.in/news/smartwatch",
+          "date": "2025-01-01T00:00:00Z",
+          "priority": "HIGH"
+        }
+      ],
+      "revenue": {
+        "revenue": 42000,
+        "grossProfit": null,
+        "netProfit": null,
+        "grossMargin": null,
+        "netMargin": null,
+        "marketCap": 285000,
+        "websiteVisits": null,
+        "quarter": 1,
+        "year": 2025
+      }
+    },
+    {
+      "id": "maxima",
+      "name": "Maxima Watches",
+      "description": "Maxima is a popular Indian watch brand known for affordable and digital watches, targeting students and budget-conscious consumers.",
+      "industry": "Watches",
+      "scaleCategory": "small",
+      "marketCap": {
+        "value": 300,
+        "unit": "INR crores"
+      },
+      "overview": {
+        "summary": "Maxima is an affordable watch brand targeting Indian middle-class consumers.",
+        "founded": 1996,
+        "headquarters": "Gurgaon, Haryana",
+        "instaFollowers": 0
+      },
+      "businessModel": {
+        "revenueStreams": [
+          "Budget watches",
+          "Smartwatches"
+        ],
+        "keyPartnerships": [],
+        "costStructure": [],
+        "pieChart": null
+      },
+      "products": [
+        {
+          "id": "maxima_p1",
+          "name": "Maxima Attivo",
+          "description": "Digital sports watch with stopwatch, LED light, and water resistance.",
+          "pricing": 899,
+          "keyFeatures": [
+            "Stopwatch",
+            "LED light",
+            "Water resistant"
+          ],
+          "productLinks": [
+            "https://www.maximawatches.com/attivo"
+          ]
+        },
+        {
+          "id": "maxima_p2",
+          "name": "Maxima Analog",
+          "description": "Classic formal analog watch at an affordable price.",
+          "pricing": 1299,
+          "keyFeatures": [
+            "Classic design",
+            "Affordable price",
+            "Durable strap"
+          ],
+          "productLinks": [
+            "https://www.maximawatches.com/analog"
+          ]
+        },
+        {
+          "id": "maxima_p3",
+          "name": "Maxima Hybrid",
+          "description": "Entry-level smartwatch with Bluetooth, fitness tracking, and basic notifications.",
+          "pricing": 2999,
+          "keyFeatures": [
+            "Bluetooth",
+            "Fitness tracking",
+            "Basic notifications"
+          ],
+          "productLinks": [
+            "https://www.maximawatches.com/hybrid"
+          ]
+        },
+        {
+          "id": "maxima_p4",
+          "name": "Maxima Ego",
+          "description": "Trendy fashion watches for women with multiple colors and gift packaging.",
+          "pricing": 1499,
+          "keyFeatures": [
+            "Trendy designs",
+            "Multiple colors",
+            "Gift box"
+          ],
+          "productLinks": [
+            "https://www.maximawatches.com/ego"
+          ]
+        },
+        {
+          "id": "maxima_p5",
+          "name": "Maxima SmartFit",
+          "description": "Entry-level smartwatch with Bluetooth connectivity, fitness tracking, and notification alerts.",
+          "pricing": 3499,
+          "keyFeatures": [
+            "Bluetooth connectivity",
+            "Fitness tracking",
+            "Notification alerts"
+          ],
+          "productLinks": [
+            "https://www.maximawatches.com/smartfit"
+          ]
+        }
+      ],
+      "news": [
+        {
+          "title": "Maxima Launches New Smartwatches",
+          "description": "Maxima introduces new affordable smartwatches for students and young adults.",
+          "sourceLink": "https://www.maximawatches.com/news/smartwatches",
+          "date": "2025-01-01T00:00:00Z",
+          "priority": "MEDIUM"
+        }
+      ],
+      "revenue": {
+        "revenue": 200,
+        "grossProfit": null,
+        "netProfit": null,
+        "grossMargin": null,
+        "netMargin": null,
+        "marketCap": 300,
+        "websiteVisits": null,
+        "quarter": 1,
+        "year": 2025
+      }
+    }
+  ],
+  "users": [],
+  "products": [],
+  "revenues": [],
+  "businessModels": [],
+  "aiReports": [],
+  "overviews": []
+}
