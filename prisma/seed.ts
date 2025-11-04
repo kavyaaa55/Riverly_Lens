@@ -1,740 +1,202 @@
-import { PrismaClient, PeriodType, GrowthMetricType, RevenueBreakdownType, RevenueStream } from '@prisma/client';
+import { PrismaClient, SocialPlatform } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🚀 Starting revenue data seed...\n');
+  console.log('🚀 Starting 12-month social follower data seed (Oct 2024 - Sep 2025)...\n');
 
-  // Get all companies (assuming they exist from previous seeds)
+  // Get all companies with their social accounts
   const companies = await prisma.company.findMany({
     include: {
-      products: true, // For linking revenue breakdowns to products
-      businessModel: true, // For linking revenue streams
+      socialAccounts: true,
     },
   });
 
-  console.log(`Found ${companies.length} companies\n`);
+  // Generate 12 months of follower data (Oct 2024 - Sep 2025)
+  const months = [
+    new Date('2024-10-01'),
+    new Date('2024-11-01'),
+    new Date('2024-12-01'),
+    new Date('2025-01-01'),
+    new Date('2025-02-01'),
+    new Date('2025-03-01'),
+    new Date('2025-04-01'),
+    new Date('2025-05-01'),
+    new Date('2025-06-01'),
+    new Date('2025-07-01'),
+    new Date('2025-08-01'),
+    new Date('2025-09-01'),
+  ];
 
-  // Comprehensive revenue data for all 20 companies (realistic estimates based on FY25 reports)
-  const revenueData: Record<
-    string,
-    {
-      revenueRecords: Array<{
-        periodType: PeriodType;
-        periodStart: Date;
-        periodEnd: Date;
-        amount: number; // In Rs Crore
-      }>;
-      salesVolumes: Array<{
-        periodType: PeriodType;
-        periodStart: Date;
-        periodEnd: Date;
-        units: number;
-      }>;
-      revenueBreakdowns: Array<{
-        periodType: PeriodType;
-        periodStart: Date;
-        periodEnd: Date;
-        kind: RevenueBreakdownType;
-        label: string;
-        amount: number;
-        productId?: string; // Links to seeded product ID
-      }>;
-      geoSalesShares: Array<{
-        periodType: PeriodType;
-        periodStart: Date;
-        periodEnd: Date;
-        place: string;
-        percent: number;
-      }>;
-      growthMetrics: Array<{
-        metric: GrowthMetricType;
-        date: Date;
-        valuePct: number;
-      }>;
-      customerMetrics: Array<{
-        date: Date;
-        aov?: number;
-        retentionPct?: number;
-      }>;
-      profitabilityRecords: Array<{
-        periodType: PeriodType;
-        periodStart: Date;
-        periodEnd: Date;
-        grossMarginPct?: number;
-        netMarginPct?: number;
-        ebitdaMarginPct?: number;
-      }>;
-      revenueStreams: RevenueStream[];
-    }
-  > = {
+  // Real + estimated 12-month progression (based on Lenskart 1.27M IG real[web:61]; eyeball growth: 5-8% monthly, festive spikes in Oct-Dec)
+  const followerData: Record<string, Record<SocialPlatform, number[]>> = {
     'lenskart-india': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 1663.125 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-01-01'), periodEnd: new Date('2025-03-31'), amount: 1528.125 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2024-10-01'), periodEnd: new Date('2024-12-31'), amount: 1490.625 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2024-07-01'), periodEnd: new Date('2024-09-30'), amount: 1381.25 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 6652.5 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 1500000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 5500000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Eyeglasses', amount: 800, productId: companies.find(c => c.id === 'lenskart-india')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Online Sales', amount: 1200 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Sunglasses', amount: 450, productId: companies.find(c => c.id === 'lenskart-india')?.products?.[1]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'North India', percent: 35.5 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'South India', percent: 28.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'West India', percent: 25.5 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'East India', percent: 11.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 22.50 },
-        { metric: GrowthMetricType.MOM, date: new Date('2025-06-30'), valuePct: 5.20 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 1250, retentionPct: 65.00 },
-        { date: new Date('2025-03-31'), aov: 1180, retentionPct: 62.50 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 45.20, netMarginPct: 4.50, ebitdaMarginPct: 12.80 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 44.00, netMarginPct: 4.47, ebitdaMarginPct: 11.50 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME, RevenueStream.SUBSCRIPTION],
+      INSTAGRAM: [980000, 1020000, 1080000, 1110000, 1145000, 1180000, 1210000, 1235000, 1255000, 1270000, 1276000, 1276000], // Real baseline: 1.27M[web:61]
+      FACEBOOK: [1050000, 1100000, 1150000, 1175000, 1200000, 1220000, 1235000, 1245000, 1250000, 1255000, 1258000, 1260000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'titan-eye-plus': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 181 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-01-01'), periodEnd: new Date('2025-03-31'), amount: 172 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 724 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 450000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 1800000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Premium Frames', amount: 90, productId: companies.find(c => c.id === 'titan-eye-plus')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Retail Stores', amount: 120 },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'South India', percent: 40.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'West India', percent: 30.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'North India', percent: 20.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'East India', percent: 10.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 5.00 },
-        { metric: GrowthMetricType.MOM, date: new Date('2025-06-30'), valuePct: 3.50 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 4500, retentionPct: 55.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 55.00, netMarginPct: 11.70, ebitdaMarginPct: 18.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [98000, 102000, 108000, 111000, 115000, 118000, 121000, 123500, 125000, 126500, 127500, 128000], // Steady premium brand growth
+      FACEBOOK: [300000, 310000, 320000, 325000, 330000, 335000, 340000, 345000, 348000, 350000, 352000, 355000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'bata-india': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 850 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 3200 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 2500000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 10000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Formal Shoes', amount: 300, productId: companies.find(c => c.id === 'bata-india')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Offline Sales', amount: 550 },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'North India', percent: 45.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'West India', percent: 25.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'South India', percent: 20.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'East India', percent: 10.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 10.50 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 800, retentionPct: 50.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 48.00, netMarginPct: 8.50, ebitdaMarginPct: 15.20 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [200000, 210000, 220000, 225000, 230000, 235000, 238000, 240000, 242000, 244000, 245000, 245000], // Festive footwear spike
+      FACEBOOK: [1300000, 1360000, 1420000, 1440000, 1460000, 1475000, 1485000, 1490000, 1495000, 1498000, 1500000, 1500000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'amul-india': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 2250 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 9000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 50000000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 200000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Milk Products', amount: 1500, productId: companies.find(c => c.id === 'amul-india')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Domestic Sales', amount: 2000 },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'West India', percent: 50.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'North India', percent: 30.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'South India', percent: 15.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'East India', percent: 5.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 12.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 150, retentionPct: 85.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 25.00, netMarginPct: 18.00, ebitdaMarginPct: 22.50 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME, RevenueStream.SUBSCRIPTION],
+      INSTAGRAM: [765000, 800000, 820000, 835000, 848000, 860000, 870000, 878000, 883000, 887000, 890000, 892000], // Dairy seasonal growth
+      FACEBOOK: [2850000, 2980000, 3050000, 3080000, 3110000, 3135000, 3160000, 3175000, 3185000, 3192000, 3197000, 3200000],
+      TWITTER: [400000, 420000, 430000, 435000, 440000, 445000, 448000, 451000, 453000, 454500, 455500, 456000],
     },
     'britannia-industries': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 448.575 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 1794.3 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 120000000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 480000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Biscuits', amount: 350, productId: companies.find(c => c.id === 'britannia-industries')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Retail', amount: 400 },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'North India', percent: 35.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'South India', percent: 30.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'West India', percent: 20.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'East India', percent: 15.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 6.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 200, retentionPct: 70.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 28.50, netMarginPct: 2.00, ebitdaMarginPct: 10.80 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [150000, 157000, 164000, 168000, 171000, 173500, 175000, 176000, 177000, 177500, 178000, 178000],
+      FACEBOOK: [1850000, 1930000, 1980000, 2010000, 2035000, 2055000, 2070000, 2082000, 2090000, 2095000, 2098000, 2100000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'hindustan-unilever': {
-      revenueRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), amount: 3932.75 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 63121 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), units: 80000000 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 320000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.PRODUCT, label: 'Personal Care', amount: 2000, productId: companies.find(c => c.id === 'hindustan-unilever')?.products?.[0]?.id },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), kind: RevenueBreakdownType.SOURCE, label: 'Modern Trade', amount: 2500 },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'Urban India', percent: 60.0 },
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), place: 'Rural India', percent: 40.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-06-30'), valuePct: 2.40 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-06-30'), aov: 300, retentionPct: 75.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.QUARTER, periodStart: new Date('2025-04-01'), periodEnd: new Date('2025-06-30'), grossMarginPct: 52.00, netMarginPct: 3.70, ebitdaMarginPct: 16.50 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME, RevenueStream.FREEMIUM],
+      INSTAGRAM: [132000, 138000, 142000, 145000, 148000, 150500, 152500, 153800, 154800, 155500, 155800, 156000],
+      FACEBOOK: [790000, 825000, 850000, 860000, 868000, 875000, 880000, 884000, 886500, 888000, 889000, 890000],
+      TWITTER: [210000, 219000, 225000, 227000, 229000, 230500, 231500, 232500, 233200, 233700, 234000, 234000],
     },
     'bajaj-auto': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 50000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 4000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Two-Wheelers', amount: 45000, productId: companies.find(c => c.id === 'bajaj-auto')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Domestic', percent: 60.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Exports', percent: 40.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 15.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 80000, retentionPct: 60.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 30.00, netMarginPct: 12.00, ebitdaMarginPct: 18.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [378000, 395000, 405000, 412000, 418000, 425000, 432000, 437000, 440000, 442500, 444000, 445000],
+      FACEBOOK: [3400000, 3550000, 3650000, 3680000, 3710000, 3735000, 3758000, 3775000, 3785000, 3792000, 3797000, 3800000],
+      TWITTER: [257000, 268000, 275000, 278000, 280000, 282000, 284000, 285000, 286000, 286500, 287000, 287000],
     },
     'hero-motocorp': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 4075.6 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 5890000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Motorcycles', amount: 3500, productId: companies.find(c => c.id === 'hero-motocorp')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Domestic', percent: 95.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Exports', percent: 5.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 8.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 70000, retentionPct: 70.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 28.00, netMarginPct: 11.00, ebitdaMarginPct: 15.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [542000, 566000, 580000, 590000, 598000, 606000, 612000, 617000, 620000, 622000, 623500, 625000],
+      FACEBOOK: [4620000, 4820000, 4950000, 5020000, 5070000, 5110000, 5140000, 5165000, 5180000, 5190000, 5195000, 5200000],
+      TWITTER: [360000, 376000, 385000, 388000, 391000, 393500, 395000, 396000, 396800, 397500, 398000, 398000],
     },
     'tvs-motors': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 3200 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 3500000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Scooters', amount: 1500, productId: companies.find(c => c.id === 'tvs-motors')?.products?.[2]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Domestic', percent: 80.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Exports', percent: 20.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 10.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 60000, retentionPct: 65.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 25.00, netMarginPct: 9.00, ebitdaMarginPct: 14.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [453000, 473000, 485000, 493000, 500000, 506000, 510000, 513500, 516000, 518000, 519000, 520000],
+      FACEBOOK: [2760000, 2880000, 2950000, 2985000, 3015000, 3040000, 3060000, 3075000, 3085000, 3092000, 3097000, 3100000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'samsung-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 100000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 20000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Smartphones', amount: 60000, productId: companies.find(c => c.id === 'samsung-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Urban India', percent: 70.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Rural India', percent: 30.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 12.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 25000, retentionPct: 55.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 35.00, netMarginPct: 10.00, ebitdaMarginPct: 20.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME, RevenueStream.FREEMIUM],
+      INSTAGRAM: [1030000, 1075000, 1100000, 1125000, 1148000, 1165000, 1178000, 1188000, 1194000, 1198000, 1199500, 1200000],
+      FACEBOOK: [13280000, 13850000, 14200000, 14350000, 14500000, 14620000, 14720000, 14810000, 14880000, 14930000, 14970000, 15000000],
+      TWITTER: [884000, 919000, 945000, 955000, 965000, 972000, 978000, 981000, 983500, 985500, 986500, 987000],
     },
     'xiaomi-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 25000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 15000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Smartphones', amount: 18000, productId: companies.find(c => c.id === 'xiaomi-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 40.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 25.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 20.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 15.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 18.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 15000, retentionPct: 50.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 20.00, netMarginPct: 5.00, ebitdaMarginPct: 12.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [860000, 898000, 920000, 933000, 945000, 956000, 965000, 971000, 975000, 977500, 979000, 980000],
+      FACEBOOK: [7580000, 7910000, 8100000, 8200000, 8290000, 8365000, 8425000, 8470000, 8490000, 8495000, 8498000, 8500000],
+      TWITTER: [687000, 717000, 735000, 742000, 748000, 754000, 758000, 761000, 763000, 764000, 764800, 765000],
     },
     'oneplus-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 8000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 2000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Smartphones', amount: 6000, productId: companies.find(c => c.id === 'oneplus-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Urban India', percent: 80.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Rural India', percent: 20.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 20.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 40000, retentionPct: 60.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 25.00, netMarginPct: 8.00, ebitdaMarginPct: 15.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [982000, 1026000, 1050000, 1062000, 1073000, 1082000, 1089000, 1094000, 1097000, 1099000, 1100000, 1100000],
+      FACEBOOK: [3760000, 3920000, 4020000, 4065000, 4100000, 4130000, 4155000, 4175000, 4187000, 4195000, 4198000, 4200000],
+      TWITTER: [469000, 489000, 502000, 507000, 511000, 514000, 516500, 518000, 519000, 519700, 520000, 520000],
     },
     'cafe-coffee-day': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 1200 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 5000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Beverages', amount: 800, productId: companies.find(c => c.id === 'cafe-coffee-day')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 50.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 30.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 15.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 5.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 5.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 300, retentionPct: 45.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 40.00, netMarginPct: 5.00, ebitdaMarginPct: 12.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [276000, 288000, 295000, 300000, 305000, 310000, 313000, 315500, 317000, 318500, 319500, 320000],
+      FACEBOOK: [2480000, 2590000, 2650000, 2685000, 2715000, 2740000, 2760000, 2775000, 2785000, 2792000, 2797000, 2800000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'mcdonalds-india-westlife': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 2491 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 200000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Burgers', amount: 1200, productId: companies.find(c => c.id === 'mcdonalds-india-westlife')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 40.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 30.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 20.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 10.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 7.30 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 400, retentionPct: 50.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 30.00, netMarginPct: 6.00, ebitdaMarginPct: 15.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [692000, 723000, 740000, 750000, 758000, 765000, 770000, 774000, 778000, 781000, 783000, 785000],
+      FACEBOOK: [4000000, 4180000, 4280000, 4320000, 4355000, 4385000, 4410000, 4435000, 4455000, 4470000, 4487000, 4500000],
+      TWITTER: [510000, 532000, 545000, 550000, 554000, 558000, 561000, 563500, 565000, 566000, 566800, 567000],
     },
     'dominos-india-jubilant': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 4500 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 150000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Pizzas', amount: 3000, productId: companies.find(c => c.id === 'dominos-india-jubilant')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 50.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 20.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 20.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 10.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 15.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 500, retentionPct: 55.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 25.00, netMarginPct: 7.00, ebitdaMarginPct: 13.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [785000, 820000, 840000, 852000, 863000, 872000, 879000, 883500, 886000, 888000, 889000, 890000],
+      FACEBOOK: [5520000, 5760000, 5900000, 5970000, 6030000, 6080000, 6120000, 6150000, 6175000, 6190000, 6197000, 6200000],
+      TWITTER: [388000, 405000, 415000, 419000, 423000, 426000, 428000, 429000, 429700, 430000, 430000, 430000],
     },
     'reebok-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 1500 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 1000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Training Shoes', amount: 800, productId: companies.find(c => c.id === 'reebok-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Urban India', percent: 70.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Rural India', percent: 30.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 8.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 5000, retentionPct: 40.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 45.00, netMarginPct: 10.00, ebitdaMarginPct: 18.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [575000, 601000, 615000, 623000, 630000, 636000, 641000, 644500, 647000, 648500, 649500, 650000],
+      FACEBOOK: [2040000, 2130000, 2180000, 2210000, 2235000, 2255000, 2270000, 2282000, 2290000, 2296000, 2299000, 2300000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'nike-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 3000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 2000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Running Shoes', amount: 1800, productId: companies.find(c => c.id === 'nike-india')?.products?.[1]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Urban India', percent: 85.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Rural India', percent: 15.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 12.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 8000, retentionPct: 50.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 50.00, netMarginPct: 15.00, ebitdaMarginPct: 25.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [1234000, 1289000, 1320000, 1340000, 1358000, 1373000, 1385000, 1393000, 1397000, 1399000, 1399800, 1400000],
+      FACEBOOK: [3110000, 3247000, 3330000, 3370000, 3405000, 3435000, 3460000, 3480000, 3492000, 3498000, 3499500, 3500000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'puma-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 2000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 1500000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Sneakers', amount: 1200, productId: companies.find(c => c.id === 'puma-india')?.products?.[1]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Urban India', percent: 75.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'Rural India', percent: 25.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 10.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 6000, retentionPct: 45.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 45.00, netMarginPct: 12.00, ebitdaMarginPct: 20.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [687000, 718000, 735000, 745000, 754000, 762000, 768000, 773000, 776000, 778000, 779000, 780000],
+      FACEBOOK: [1860000, 1944000, 1990000, 2020000, 2045000, 2065000, 2080000, 2090000, 2095000, 2098000, 2099500, 2100000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'nestle-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 20000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 500000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Noodles', amount: 8000, productId: companies.find(c => c.id === 'nestle-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 30.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 25.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 25.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 20.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 9.00 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 100, retentionPct: 80.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 55.00, netMarginPct: 14.00, ebitdaMarginPct: 22.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [210000, 219500, 225000, 230000, 234000, 237000, 240000, 242000, 243500, 244500, 245000, 245000],
+      FACEBOOK: [1598000, 1669000, 1710000, 1735000, 1755000, 1772000, 1785000, 1795000, 1800000, 1802000, 1803000, 1800000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     'dabur-india': {
-      revenueRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), amount: 12000 },
-      ],
-      salesVolumes: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), units: 300000000 },
-      ],
-      revenueBreakdowns: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), kind: RevenueBreakdownType.PRODUCT, label: 'Ayurvedic Products', amount: 7000, productId: companies.find(c => c.id === 'dabur-india')?.products?.[0]?.id },
-      ],
-      geoSalesShares: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'North India', percent: 40.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'South India', percent: 25.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'West India', percent: 20.0 },
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), place: 'East India', percent: 15.0 },
-      ],
-      growthMetrics: [
-        { metric: GrowthMetricType.YOY, date: new Date('2025-03-31'), valuePct: 7.50 },
-      ],
-      customerMetrics: [
-        { date: new Date('2025-03-31'), aov: 200, retentionPct: 75.00 },
-      ],
-      profitabilityRecords: [
-        { periodType: PeriodType.YEAR, periodStart: new Date('2024-04-01'), periodEnd: new Date('2025-03-31'), grossMarginPct: 60.00, netMarginPct: 12.00, ebitdaMarginPct: 20.00 },
-      ],
-      revenueStreams: [RevenueStream.ONE_TIME],
+      INSTAGRAM: [166000, 173600, 178000, 182000, 185000, 188000, 190500, 192000, 193200, 194200, 194800, 195000],
+      FACEBOOK: [1326000, 1386000, 1420000, 1440000, 1458000, 1472000, 1483000, 1491000, 1496000, 1498500, 1499500, 1500000],
+      TWITTER: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   };
 
-  let totalRevenueRecords = 0;
-  let totalSalesVolumes = 0;
-  let totalBreakdowns = 0;
-  let totalGeoShares = 0;
-  let totalGrowthMetrics = 0;
-  let totalCustomerMetrics = 0;
-  let totalProfitability = 0;
-  let companiesUpdated = 0;
+  let totalSnapshots = 0;
+  let currentFollowersUpdated = 0;
 
   for (const company of companies) {
-    const companyData = revenueData[company.id];
-    if (!companyData) {
-      console.log(`⚠️ No revenue data for ${company.name}, skipping...`);
+    const companyFollowers = followerData[company.id];
+    if (!companyFollowers) {
+      console.log(`⚠️  No follower data for ${company.name}, skipping...`);
       continue;
     }
 
-    try {
-      // Create RevenueRecords
-      for (const record of companyData.revenueRecords) {
-        await prisma.revenueRecord.upsert({
-          where: { id: `${company.id}_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}` }, // Unique ID for upsert
-          update: {},
-          create: { id: `${company.id}_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}`, companyId: company.id, ...record },
+    for (const socialAccount of company.socialAccounts) {
+      const platformData = companyFollowers[socialAccount.platform];
+      if (!platformData || platformData.every(count => count === 0)) {
+        console.log(`  ⚠️  No ${socialAccount.platform} data for ${company.name}`);
+        continue;
+      }
+
+      // Create/upsert snapshots for each of 12 months
+      for (let i = 0; i < months.length; i++) {
+        await prisma.socialFollowerSnapshot.upsert({
+          where: {
+            socialAccountId_date: {
+              socialAccountId: socialAccount.id,
+              date: months[i],
+            },
+          },
+          update: {
+            count: platformData[i],
+          },
+          create: {
+            socialAccountId: socialAccount.id,
+            date: months[i],
+            count: platformData[i],
+          },
         });
-      }
-      totalRevenueRecords += companyData.revenueRecords.length;
-
-      // Create SalesVolumeRecords
-      for (const record of companyData.salesVolumes) {
-        await prisma.salesVolumeRecord.upsert({
-          where: { id: `${company.id}_vol_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}` },
-          update: {},
-          create: { id: `${company.id}_vol_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}`, companyId: company.id, ...record },
-        });
-      }
-      totalSalesVolumes += companyData.salesVolumes.length;
-
-      // Create RevenueBreakdowns (link to products if available)
-      for (const breakdown of companyData.revenueBreakdowns) {
-        const productId = breakdown.productId || null; // Use if available
-        await prisma.revenueBreakdown.upsert({
-          where: { id: `${company.id}_bd_${breakdown.periodStart.toISOString()}_${breakdown.periodEnd.toISOString()}_${breakdown.label}` },
-          update: {},
-          create: { id: `${company.id}_bd_${breakdown.periodStart.toISOString()}_${breakdown.periodEnd.toISOString()}_${breakdown.label}`, companyId: company.id, productId, ...breakdown },
-        });
-      }
-      totalBreakdowns += companyData.revenueBreakdowns.length;
-
-      // Create GeoSalesShares
-      for (const share of companyData.geoSalesShares) {
-        await prisma.geoSalesShare.upsert({
-          where: { companyId_periodStart_periodEnd_place: { companyId: company.id, periodStart: share.periodStart, periodEnd: share.periodEnd, place: share.place } },
-          update: {},
-          create: { companyId: company.id, ...share },
-        });
-      }
-      totalGeoShares += companyData.geoSalesShares.length;
-
-      // Create GrowthMetrics
-      for (const metric of companyData.growthMetrics) {
-        await prisma.growthMetric.upsert({
-          where: { id: `${company.id}_gm_${metric.metric}_${metric.date.toISOString()}` },
-          update: {},
-          create: { id: `${company.id}_gm_${metric.metric}_${metric.date.toISOString()}`, companyId: company.id, ...metric },
-        });
-      }
-      totalGrowthMetrics += companyData.growthMetrics.length;
-
-      // Create CustomerMetrics
-      for (const metric of companyData.customerMetrics) {
-        await prisma.customerMetric.upsert({
-          where: { companyId_date: { companyId: company.id, date: metric.date } },
-          update: {},
-          create: { companyId: company.id, ...metric },
-        });
-      }
-      totalCustomerMetrics += companyData.customerMetrics.length;
-
-      // Create ProfitabilityRecords
-      for (const record of companyData.profitabilityRecords) {
-        await prisma.profitabilityRecord.upsert({
-          where: { id: `${company.id}_pr_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}` },
-          update: {},
-          create: { id: `${company.id}_pr_${record.periodStart.toISOString()}_${record.periodEnd.toISOString()}`, companyId: company.id, ...record },
-        });
-      }
-      totalProfitability += companyData.profitabilityRecords.length;
-
-      // Update BusinessModel revenue streams
-      if (company.businessModel && companyData.revenueStreams.length > 0) {
-        for (const stream of companyData.revenueStreams) {
-          await prisma.businessModelRevenueStream.upsert({
-            where: { businessModelId_stream: { businessModelId: company.businessModel.id, stream } },
-            update: {},
-            create: { businessModelId: company.businessModel.id, stream },
-          });
-        }
+        totalSnapshots++;
       }
 
-      companiesUpdated++;
-      console.log(`✓ Seeded revenue data for ${company.name} (${companyData.revenueRecords.length} revenue records)`);
-    } catch (error) {
-      console.error(`❌ Error seeding for ${company.name}:`, error);
+      // Update the current follower count (Sep 2025) in SocialAccount
+      await prisma.socialAccount.update({
+        where: { id: socialAccount.id },
+        data: { followers: platformData[platformData.length - 1] },
+      });
+      currentFollowersUpdated++;
+
+      console.log(`  ✓ ${company.name} - ${socialAccount.platform}: ${platformData[0].toLocaleString()} → ${platformData[11].toLocaleString()} (${((platformData[11] - platformData[0]) / platformData[0] * 100).toFixed(1)}% growth)`);
     }
   }
 
-  console.log('\n✅ Revenue data seed completed successfully!\n');
+  console.log('\n✅ 12-month follower data seed completed!\n');
   console.log('📊 Summary:');
-  console.log(`   - Companies Updated: ${companiesUpdated}`);
-  console.log(`   - Revenue Records: ${totalRevenueRecords}`);
-  console.log(`   - Sales Volumes: ${totalSalesVolumes}`);
-  console.log(`   - Revenue Breakdowns: ${totalBreakdowns}`);
-  console.log(`   - Geo Sales Shares: ${totalGeoShares}`);
-  console.log(`   - Growth Metrics: ${totalGrowthMetrics}`);
-  console.log(`   - Customer Metrics: ${totalCustomerMetrics}`);
-  console.log(`   - Profitability Records: ${totalProfitability}\n`);
+  console.log(`   - Total Snapshots Created/Updated: ${totalSnapshots}`);
+  console.log(`   - Social Accounts Updated: ${currentFollowersUpdated}`);
+  console.log(`   - Time Period: Oct 2024 - Sep 2025 (12 months)`);
+  console.log(`   - Real Data Source: Lenskart Instagram (1.27M)[web:61]; others eyeball-realistic based on growth trends[web:72][web:74]`);
+
+  // Optional: Print growth summary for all
+  console.log('\n📈 Growth Highlights:');
+  Object.entries(followerData).forEach(([companyId, platforms]) => {
+    const igData = platforms.INSTAGRAM;
+    if (igData && igData[0] > 0) {
+      const growth = ((igData[11] - igData[0]) / igData[0] * 100).toFixed(1);
+      console.log(`   - ${companyId.replace('-', ' ').toUpperCase()}: ${growth}% IG growth`);
+    }
+  });
 }
 
 main()

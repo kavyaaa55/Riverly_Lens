@@ -1,12 +1,16 @@
 // components/overview-dashboard.tsx
 'use client';
 
+import { useState } from 'react';
 import { Company, SocialAccount, BusinessModel, Product } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, DollarSign, TrendingUp, Store } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, DollarSign, TrendingUp, Store, Eye, EyeOff, Plus, Minus, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner'; // or your preferred toast library
 
 type BusinessModelWithRelations = BusinessModel & {
   revenueStreams: any[];
@@ -18,8 +22,8 @@ type SerializedRevenueRecord = {
   id: string;
   companyId: string;
   periodType: string;
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart: string;
+  periodEnd: string;
   amount: string;
 };
 
@@ -32,9 +36,14 @@ type CompanyWithOverview = Company & {
 
 interface OverviewDashboardProps {
   company: CompanyWithOverview;
+  initialIsTracking?: boolean;
 }
 
-export default function OverviewDashboard({ company }: OverviewDashboardProps) {
+export default function OverviewDashboard({ company, initialIsTracking = false }: OverviewDashboardProps) {
+  const { data: session } = useSession();
+  const [isTracking, setIsTracking] = useState(initialIsTracking);
+  const [isLoading, setIsLoading] = useState(false);
+
   const { socialAccounts, businessModel, revenueRecords } = company;
   const params = useParams();
   const pathname = usePathname();
@@ -60,6 +69,54 @@ export default function OverviewDashboard({ company }: OverviewDashboardProps) {
     return pathname?.startsWith(href);
   };
 
+  const handleToggleTracking = async () => {
+    if (!session?.user?.id) {
+      toast.error('Please login to track companies');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isTracking) {
+        // Remove from tracking
+        const response = await fetch(`/api/companies/${companyId}/track?userId=${session.user.id}`, {
+          method: 'DELETE',
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setIsTracking(false);
+          toast.success(result.message || 'Company removed from rivalries');
+        } else {
+          toast.error(result.error || 'Failed to remove company');
+        }
+      } else {
+        // Add to tracking
+        const response = await fetch(`/api/companies/${companyId}/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: session.user.id }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setIsTracking(true);
+          toast.success(result.message || 'Company added to rivalries');
+        } else {
+          toast.error(result.error || 'Failed to add company');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling tracking:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Company Header */}
@@ -82,15 +139,57 @@ export default function OverviewDashboard({ company }: OverviewDashboardProps) {
           )}
 
           <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{company.name}</h1>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="text-3xl font-bold">{company.name}</h1>
+
+              {/* Track/Untrack Button */}
+              {session?.user && (
+                <Button
+                  onClick={handleToggleTracking}
+                  disabled={isLoading}
+                  variant={isTracking ? 'outline' : 'default'}
+                  className={`flex items-center gap-2 ${isTracking
+                    ? 'border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground'
+                    : ''
+                    }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span>Loading...</span>
+                    </>
+                  ) : isTracking ? (
+                    <>
+                      <Minus className="w-4 h-4" />
+                      <span>Remove from Rivalries</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Add to Rivalries</span>
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+
             <p className="text-muted-foreground mb-3">
               {company.description || 'No description available'}
             </p>
-            {company.type && (
-              <Badge variant="secondary" className="text-sm">
-                {company.type}
-              </Badge>
-            )}
+
+            <div className="flex items-center gap-2">
+              {company.type && (
+                <Badge variant="secondary" className="text-sm">
+                  {company.type}
+                </Badge>
+              )}
+              {isTracking && (
+                <Badge variant="default" className="text-sm flex items-center gap-1">
+                  <Eye className="w-3 h-3" />
+                  Tracking
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
@@ -127,7 +226,6 @@ export default function OverviewDashboard({ company }: OverviewDashboardProps) {
           <StatCard
             title="Quarterly Revenue"
             icon={<DollarSign className="w-5 h-5" />}
-            //value={`${formatRevenue(latestRevenue)}B`}
             value={`$134B`}
             growth={11.3}
           />
@@ -286,11 +384,6 @@ function formatNumber(num: number): string {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
   return num.toString();
-}
-
-function formatRevenue(amount: number): string {
-  if (amount >= 1000000000) return (amount / 1000000000).toFixed(1);
-  return (amount / 1000000000).toFixed(1);
 }
 
 function formatEnumValue(value: string): string {

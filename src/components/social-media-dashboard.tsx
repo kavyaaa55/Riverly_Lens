@@ -1,17 +1,35 @@
-// components/social-media-dashboard.tsx
 'use client';
 
-import { Company, SocialAccount, SocialFollowerSnapshot, SocialTopPost } from '@prisma/client';
 import { Users, DollarSign, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-type SocialAccountWithData = SocialAccount & {
-  followerSnapshots: SocialFollowerSnapshot[];
-  topPosts: SocialTopPost[];
+// Types
+type SerializedFollowerSnapshot = {
+  id: string;
+  socialAccountId: string;
+  date: string;
+  count: number;
 };
 
-type CompanyWithSocial = Company & {
+type SerializedTopPost = {
+  id: string;
+  socialAccountId: string;
+  title: string;
+  link: string;
+  postedAt: string;
+};
+
+type SocialAccountWithData = {
+  id: string;
+  platform: 'INSTAGRAM' | 'TWITTER' | 'FACEBOOK';
+  followers: number | null;
+  followerSnapshots: SerializedFollowerSnapshot[];
+  topPosts: SerializedTopPost[];
+};
+
+type CompanyWithSocial = {
   socialAccounts: SocialAccountWithData[];
 };
 
@@ -19,6 +37,7 @@ interface SocialMediaDashboardProps {
   company: CompanyWithSocial;
 }
 
+// NAMED EXPORT - This is important!
 export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
   const { socialAccounts } = company;
 
@@ -26,10 +45,31 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
   const twitterAccount = socialAccounts.find((acc) => acc.platform === 'TWITTER');
   const facebookAccount = socialAccounts.find((acc) => acc.platform === 'FACEBOOK');
 
-  const calculateGrowth = (snapshots: SocialFollowerSnapshot[]) => {
+  const getLatestFollowerCount = (account: SocialAccountWithData | undefined) => {
+    if (!account) return 0;
+    if (account.followerSnapshots.length === 0) return account.followers || 0;
+
+    // Sort by date and get the latest snapshot
+    const sortedSnapshots = [...account.followerSnapshots].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    console.log(`${account.platform} Latest:`, {
+      date: sortedSnapshots[0].date,
+      count: sortedSnapshots[0].count,
+      allDates: sortedSnapshots.map(s => ({ date: s.date, count: s.count }))
+    });
+
+    return sortedSnapshots[0].count;
+  };
+
+  const calculateGrowth = (snapshots: SerializedFollowerSnapshot[]) => {
     if (snapshots.length < 2) return 0;
-    const latest = snapshots[snapshots.length - 1].count;
-    const previous = snapshots[snapshots.length - 2].count;
+    const sortedSnapshots = [...snapshots].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const latest = sortedSnapshots[0].count;
+    const previous = sortedSnapshots[1].count;
     return ((latest - previous) / previous) * 100;
   };
 
@@ -41,7 +81,7 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
           <StatCard
             platform="Instagram"
             icon={<Users className="w-5 h-5" />}
-            value={formatNumber(instagramAccount.followers || 0)}
+            value={formatNumber(getLatestFollowerCount(instagramAccount))}
             growth={calculateGrowth(instagramAccount.followerSnapshots)}
           />
         )}
@@ -49,8 +89,8 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
         {twitterAccount && (
           <StatCard
             platform="Twitter"
-            icon={<DollarSign className="w-5 h-5" />}
-            value={formatCurrency(twitterAccount.followers || 0)}
+            icon={<Users className="w-5 h-5" />}
+            value={formatNumber(getLatestFollowerCount(twitterAccount))}
             growth={calculateGrowth(twitterAccount.followerSnapshots)}
           />
         )}
@@ -58,8 +98,8 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
         {facebookAccount && (
           <StatCard
             platform="Facebook"
-            icon={<DollarSign className="w-5 h-5" />}
-            value={formatCurrency(facebookAccount.followers || 0)}
+            icon={<Users className="w-5 h-5" />}
+            value={formatNumber(getLatestFollowerCount(facebookAccount))}
             growth={calculateGrowth(facebookAccount.followerSnapshots)}
           />
         )}
@@ -90,7 +130,7 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
   );
 }
 
-// Stat Card Component with shadcn/ui
+// Stat Card Component
 interface StatCardProps {
   platform: string;
   icon: React.ReactNode;
@@ -122,85 +162,140 @@ function StatCard({ platform, icon, value, growth }: StatCardProps) {
   );
 }
 
-// Follower Growth Chart Component
+// Improved Follower Growth Chart Component
 function FollowerGrowthChart({ socialAccounts }: { socialAccounts: SocialAccountWithData[] }) {
-  const getMonthLabels = () => {
-    const months = new Set<string>();
-    socialAccounts.forEach((account) => {
-      account.followerSnapshots.forEach((snapshot) => {
-        const month = new Date(snapshot.date).toLocaleString('default', { month: 'short' });
-        months.add(month);
-      });
+  // Prepare chart data
+  const dateSet = new Set<string>();
+
+  // Collect all unique dates
+  socialAccounts.forEach((account) => {
+    account.followerSnapshots.forEach((snapshot) => {
+      dateSet.add(snapshot.date);
     });
-    return Array.from(months);
+  });
+
+  // Sort dates
+  const sortedDates = Array.from(dateSet).sort();
+
+  // Build chart data
+  const chartData = sortedDates.map((date) => {
+    const dataPoint: any = {
+      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      fullDate: date,
+    };
+
+    socialAccounts.forEach((account) => {
+      const snapshot = account.followerSnapshots.find((s) => s.date === date);
+      if (snapshot) {
+        dataPoint[account.platform] = snapshot.count;
+      }
+    });
+
+    return dataPoint;
+  });
+
+  if (chartData.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+        No follower data available
+      </div>
+    );
+  }
+
+  const platformColors: Record<string, string> = {
+    INSTAGRAM: 'hsl(var(--chart-1))',
+    TWITTER: 'hsl(var(--chart-2))',
+    FACEBOOK: 'hsl(var(--chart-3))',
   };
 
-  const months = getMonthLabels();
+  const platformLabels: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    TWITTER: 'Twitter',
+    FACEBOOK: 'Facebook',
+  };
 
   return (
-    <div className="relative" style={{ height: '300px' }}>
-      <svg className="w-full h-full" viewBox="0 0 1200 300">
-        {/* Grid lines */}
-        {[0, 10, 20, 30, 40].map((y, i) => (
-          <g key={i}>
-            <line
-              x1="40"
-              y1={250 - (y * 5)}
-              x2="1150"
-              y2={250 - (y * 5)}
-              stroke="currentColor"
-              className="text-muted"
-              strokeDasharray="5,5"
-              opacity="0.2"
-            />
-            <text x="10" y={255 - (y * 5)} fontSize="12" fill="currentColor" className="text-muted-foreground">
-              {y}
-            </text>
-          </g>
-        ))}
+    <div className="w-full h-[350px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <XAxis
+            dataKey="date"
+            className="text-xs"
+            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+          />
+          <YAxis
+            className="text-xs"
+            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            tickFormatter={(value) => formatNumber(value)}
+          />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload || !payload.length) return null;
 
-        {/* Lines for each platform */}
-        {socialAccounts.map((account, accountIndex) => {
-          const color = accountIndex === 0 ? '#2563eb' : accountIndex === 1 ? '#ef4444' : '#93c5fd';
-          const points = account.followerSnapshots.map((snapshot, i) => {
-            const x = 100 + (i * 250);
-            const y = 250 - ((snapshot.count / 1000000) * 5);
-            return `${x},${y}`;
-          }).join(' ');
-
-          return (
-            <polyline
-              key={account.id}
-              points={points}
-              fill="none"
-              stroke={color}
-              strokeWidth="2"
-            />
-          );
-        })}
-
-        {/* X-axis labels */}
-        {months.map((month, i) => (
-          <text
-            key={month}
-            x={100 + (i * 250)}
-            y="280"
-            fontSize="12"
-            fill="currentColor"
-            className="text-muted-foreground"
-            textAnchor="middle"
-          >
-            {month}
-          </text>
-        ))}
-      </svg>
+              return (
+                <div className="rounded-lg border bg-background p-2 shadow-md">
+                  <div className="grid gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-[0.70rem] uppercase text-muted-foreground">
+                        {label}
+                      </span>
+                    </div>
+                    {payload.map((entry: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between gap-8">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: entry.color }}
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {platformLabels[entry.dataKey] || entry.dataKey}
+                          </span>
+                        </div>
+                        <span className="text-sm font-bold">
+                          {formatNumber(entry.value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          <Legend
+            wrapperStyle={{ paddingTop: '20px' }}
+            formatter={(value) => platformLabels[value] || value}
+            iconType="line"
+          />
+          {socialAccounts.map((account, index) => {
+            const colors = ['#2563eb', '#10b981', '#f59e0b'];
+            return (
+              <Line
+                key={account.id}
+                type="linear"
+                dataKey={account.platform}
+                stroke={colors[index % colors.length]}
+                strokeWidth={3}
+                dot={{ fill: colors[index % colors.length], strokeWidth: 2, stroke: '#fff', r: 5 }}
+                activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                animationDuration={1000}
+                connectNulls={true}
+              />
+            );
+          })}
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
 // Top Posts List Component
 function TopPostsList({ socialAccounts }: { socialAccounts: SocialAccountWithData[] }) {
-  const allPosts: Array<{ post: SocialTopPost; platform: string }> = [];
+  const allPosts: Array<{ post: SerializedTopPost; platform: string }> = [];
 
   socialAccounts.forEach((account) => {
     account.topPosts.forEach((post) => {
@@ -209,6 +304,14 @@ function TopPostsList({ socialAccounts }: { socialAccounts: SocialAccountWithDat
   });
 
   allPosts.sort((a, b) => new Date(b.post.postedAt).getTime() - new Date(a.post.postedAt).getTime());
+
+  if (allPosts.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+        No posts available
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -219,8 +322,8 @@ function TopPostsList({ socialAccounts }: { socialAccounts: SocialAccountWithDat
   );
 }
 
-// Post Card Component with shadcn/ui
-function PostCard({ post, platform }: { post: SocialTopPost; platform: string }) {
+// Post Card Component
+function PostCard({ post, platform }: { post: SerializedTopPost; platform: string }) {
   const timeAgo = getTimeAgo(new Date(post.postedAt));
 
   return (
@@ -281,4 +384,3 @@ function getTimeAgo(date: Date): string {
   if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
   return `${Math.floor(diffInDays / 30)} months ago`;
 }
-
