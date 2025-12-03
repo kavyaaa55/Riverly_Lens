@@ -67,6 +67,13 @@ export async function GET(request: NextRequest) {
                     take: 3,
                 },
                 businessModel: true,
+                audience: true, // Fetch audience demographics
+                products: {     // Fetch top products
+                    take: 3,
+                    orderBy: {
+                        releaseDate: 'desc'
+                    }
+                },
                 _count: {
                     select: {
                         products: true,
