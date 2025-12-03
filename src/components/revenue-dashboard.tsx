@@ -59,7 +59,7 @@ interface RevenueDashboardProps {
 }
 
 
-export default function RevenueDashboard({ company }: RevenueDashboardProps) {
+export default function Fn({ company }: RevenueDashboardProps) {
   // Parse dates and numbers from serialized strings
   const revenueRecords = company.revenueRecords.map((r) => ({
     ...r,

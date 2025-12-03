@@ -17,10 +17,20 @@ export async function GET(request: NextRequest) {
 
     const companies = await prisma.company.findMany({
       where: {
-        name: {
-          contains: q.trim(),
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            name: {
+              contains: q.trim(),
+              mode: 'insensitive',
+            },
+          },
+          {
+            description: {
+              contains: q.trim(),
+              mode: 'insensitive',
+            },
+          },
+        ],
       },
       select: {
         id: true,

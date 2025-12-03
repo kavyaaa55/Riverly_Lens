@@ -1,10 +1,18 @@
 // components/news-pr-dashboard.tsx
 'use client';
 
+import { useState } from 'react';
 import { Company, PressRelease, Report, ReportSource } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ExternalLink } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar, ExternalLink, ArrowUpDown } from 'lucide-react';
 
 type ReportWithSources = Report & {
   sources: ReportSource[];
@@ -21,17 +29,18 @@ interface NewsPRDashboardProps {
 
 export function NewsPRDashboard({ company }: NewsPRDashboardProps) {
   const { pressReleases, reports } = company;
+  const [sortBy, setSortBy] = useState<'date' | 'priority'>('date');
 
-  // Combine press releases and reports, then sort by date
+  // Combine press releases and reports
   const allNews = [
     ...pressReleases.map((pr) => ({
       type: 'press' as const,
       title: pr.title,
       summary: pr.aiSummary || '',
       date: pr.publishedAt,
-      priority: pr.priority,
+      priority: pr.priority || 'MEDIUM',
       sourceUrl: pr.sourceUrl,
-      source: 'Reuters', // Can be dynamic based on your data
+      source: 'Reuters',
     })),
     ...reports.map((report) => ({
       type: 'report' as const,
@@ -42,22 +51,51 @@ export function NewsPRDashboard({ company }: NewsPRDashboardProps) {
       sourceUrl: report.sources[0]?.url || '',
       source: getDomainFromUrl(report.sources[0]?.url || ''),
     })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  ];
+
+  // Sort based on selected option
+  const sortedNews = [...allNews].sort((a, b) => {
+    if (sortBy === 'date') {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    } else {
+      // Priority sorting: HIGH > MEDIUM > LOW
+      const priorityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 2;
+      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 2;
+      return bPriority - aPriority;
+    }
+  });
 
   return (
     <div className="w-full space-y-6 p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Recent News & Press Releases</CardTitle>
-          <CardDescription>AI-summarized news and market updates</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent News & Press Releases</CardTitle>
+              <CardDescription>AI-summarized news and market updates</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(value: 'date' | 'priority') => setSortBy(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Sort by Date</SelectItem>
+                  <SelectItem value="priority">Sort by Priority</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {allNews.length === 0 ? (
+          {sortedNews.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No news or press releases available
             </div>
           ) : (
-            allNews.map((news, index) => (
+            sortedNews.map((news, index) => (
               <NewsCard key={`${news.type}-${index}`} news={news} />
             ))
           )}
@@ -90,9 +128,7 @@ function NewsCard({ news }: NewsCardProps) {
         <div className="space-y-3">
           {/* Header with title and badge */}
           <div className="flex items-start justify-between gap-4">
-            <h3 className="font-semibold text-lg leading-tight flex-1">
-              {news.title}
-            </h3>
+            <h3 className="font-semibold text-lg leading-tight flex-1">{news.title}</h3>
             <Badge
               variant={
                 sentiment === 'positive'
@@ -114,9 +150,7 @@ function NewsCard({ news }: NewsCardProps) {
           </div>
 
           {/* Summary */}
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {news.summary}
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{news.summary}</p>
 
           {/* Footer with source and time */}
           <div className="flex items-center justify-between text-sm">
@@ -163,7 +197,6 @@ function getTimeAgo(date: Date): string {
 }
 
 function getSentiment(priority: string): 'positive' | 'negative' | 'neutral' {
-  // You can customize this based on your priority mapping
   if (priority === 'HIGH') return 'positive';
   if (priority === 'LOW') return 'negative';
   return 'neutral';
@@ -172,7 +205,6 @@ function getSentiment(priority: string): 'positive' | 'negative' | 'neutral' {
 function getDomainFromUrl(url: string): string {
   try {
     const domain = new URL(url).hostname.replace('www.', '');
-    // Capitalize first letter
     return domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
   } catch {
     return 'Unknown Source';

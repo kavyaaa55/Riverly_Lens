@@ -66,6 +66,15 @@ export default function NewsDetailPage() {
     }
   };
 
+  const formatText = (text: string) => {
+    return text.split('. ').map((sentence, index, array) => (
+      <span key={index} className="block mb-2">
+        {sentence}
+        {index < array.length - 1 ? '.' : ''}
+      </span>
+    ));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -173,7 +182,7 @@ export default function NewsDetailPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold text-blue-900 mb-2">AI Summary</h3>
                     <p className="text-sm text-blue-800 leading-relaxed">
-                      {reportData.summary}
+                      {formatText(reportData.summary)}
                     </p>
                   </div>
                 </div>
@@ -192,7 +201,7 @@ export default function NewsDetailPage() {
                       Market Impact Analysis
                     </h3>
                     <p className="text-sm text-amber-800 leading-relaxed">
-                      {reportData.marketImpact}
+                      {formatText(reportData.marketImpact)}
                     </p>
                   </div>
                 </div>

@@ -240,6 +240,9 @@ export function Navbar() {
               <Link href="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
+              <Link href="/compare">
+                <Button variant="ghost">Compare</Button>
+              </Link>
               <Link href="/about">
                 <Button variant="ghost">About Us</Button>
               </Link>

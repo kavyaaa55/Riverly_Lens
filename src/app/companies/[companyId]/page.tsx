@@ -2,6 +2,8 @@
 import prisma from '@/db';
 import OverviewDashboard from '@/components/overview-dashboard';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 interface OverviewPageProps {
   params: Promise<{
@@ -14,7 +16,8 @@ interface OverviewPageProps {
 
 export default async function OverviewPage({ params, searchParams }: OverviewPageProps) {
   const { companyId } = await params;
-  const { userId } = await searchParams;
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },

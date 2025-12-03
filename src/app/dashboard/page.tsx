@@ -31,6 +31,7 @@ import {
   Bell,
   ExternalLink,
   Building2,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -312,13 +313,13 @@ export default function DashboardPage() {
           <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <SidebarTrigger />
-              <h2 className="text-lg font-semibold">Dashboard</h2>
+              <h1 className="text-lg font-semibold">Dashboard</h1>
             </div>
           </header>
 
           <main className="flex-1 p-6 overflow-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+              {/* <h1 className="text-3xl font-bold mb-2">Dashboard</h1> */}
               <p className="text-gray-600">
                 Monitor your competitors. Tracking{' '}
                 <span className="font-medium">

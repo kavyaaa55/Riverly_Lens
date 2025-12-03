@@ -1,6 +1,6 @@
 import prisma from '@/db';
 import { notFound } from 'next/navigation';
-import RevenueDashboard from '@/components/revenue-dashboard';
+import { RevenueDashboard } from '@/components/revenue-dashboardd';
 
 interface RevenuePageProps {
   params: Promise<{
@@ -55,6 +55,7 @@ export default async function RevenuePage({ params }: RevenuePageProps) {
     })),
   };
 
-  return <RevenueDashboard company={serializedCompany} />;
+  return <RevenueDashboard />;
+  // return <RevenueDashboard company={serializedCompany} />;
 }
 

@@ -6,16 +6,18 @@ import { Company, SocialAccount, BusinessModel, Product } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, DollarSign, TrendingUp, Store, Eye, EyeOff, Plus, Minus, CheckCircle2 } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Store, Eye, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { toast } from 'sonner'; // or your preferred toast library
+import { toast } from 'sonner';
 
 type BusinessModelWithRelations = BusinessModel & {
-  revenueStreams: any[];
-  salesChannels: any[];
-  acquisitionChannels: any[];
+  revenueStreams: Array<{ stream: string }>;
+  salesChannels: Array<{ channel: string }>;
+  acquisitionChannels: Array<{ channel: string }>;
+  costStructures: Array<{ cost: string }>;
+  partnerships: Array<{ partner: string; partnershipType: string }>;
 };
 
 type SerializedRevenueRecord = {
@@ -79,7 +81,6 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
 
     try {
       if (isTracking) {
-        // Remove from tracking
         const response = await fetch(`/api/companies/${companyId}/track?userId=${session.user.id}`, {
           method: 'DELETE',
         });
@@ -93,7 +94,6 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
           toast.error(result.error || 'Failed to remove company');
         }
       } else {
-        // Add to tracking
         const response = await fetch(`/api/companies/${companyId}/track`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -131,7 +131,7 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
               />
             </div>
           ) : (
-            <div className="w-20 h-20 rounded-lg border bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-20 h-20 rounded-lg border bg-gradient-to-br from-[#379777] to-[#2d7a5e] flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-2xl">
                 {company.name.charAt(0).toUpperCase()}
               </span>
@@ -142,7 +142,6 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
             <div className="flex items-start justify-between gap-4 mb-2">
               <h1 className="text-3xl font-bold">{company.name}</h1>
 
-              {/* Track/Untrack Button */}
               {session?.user && (
                 <Button
                   onClick={handleToggleTracking}
@@ -201,7 +200,7 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
                 key={tab.name}
                 href={tab.href}
                 className={`pb-4 px-1 text-sm font-medium transition-colors border-b-2 ${isActiveTab(tab.href)
-                  ? 'border-primary text-foreground'
+                  ? 'border-[#379777] text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
                   }`}
               >
@@ -224,31 +223,33 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
           />
 
           <StatCard
-            title="Quarterly Revenue"
+            title="Latest Revenue"
             icon={<DollarSign className="w-5 h-5" />}
-            value={`$134B`}
-            growth={11.3}
-          />
-
-          <StatCard
-            title="Market Cap"
-            icon={<TrendingUp className="w-5 h-5" />}
-            value="108.5B"
-            subtitle="Current valuation"
+            value={formatCurrency(latestRevenue)}
+            subtitle={revenueRecords[0]?.periodType || 'Quarterly'}
             growth={0}
           />
 
           <StatCard
-            title="Store Count"
+            title="Products"
             icon={<Store className="w-5 h-5" />}
-            value="33,833"
-            subtitle="Global locations"
+            value={"2473"}
+            //value={company.products.length.toString()}
+            subtitle="Total products"
+            growth={0}
+          />
+
+          <StatCard
+            title="Social Reach"
+            icon={<TrendingUp className="w-5 h-5" />}
+            value={formatNumber(socialAccounts.reduce((sum, acc) => sum + (acc.followers || 0), 0))}
+            subtitle="Total followers"
             growth={0}
           />
         </div>
 
         {/* Business Model Overview */}
-        {businessModel && (
+        {businessModel ? (
           <Card>
             <CardHeader>
               <CardTitle>Business Model Overview</CardTitle>
@@ -256,90 +257,111 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Revenue Streams */}
                 <div>
                   <h3 className="font-semibold text-lg mb-3">Revenue Streams</h3>
-                  <ul className="space-y-2">
-                    {businessModel.revenueStreams.length > 0 ? (
-                      businessModel.revenueStreams.map((stream: any, i: number) => (
+                  {businessModel.revenueStreams && businessModel.revenueStreams.length > 0 ? (
+                    <ul className="space-y-2">
+                      {businessModel.revenueStreams.map((stream, i) => (
                         <li key={i} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-[#379777] rounded-full"></div>
                           <span className="text-sm">{formatEnumValue(stream.stream)}</span>
                         </li>
-                      ))
-                    ) : (
-                      <>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm">Retail Sales</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm">Licensing</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm">Food Service</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm">Consumer Products</span>
-                        </li>
-                      </>
-                    )}
-                  </ul>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No revenue streams data</p>
+                  )}
                 </div>
 
+                {/* Key Partnerships */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-3 text-gray-400">Key Partnerships</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-gray-400">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span className="text-sm">Nestle</span>
-                    </li>
-                    <li className="flex items-center gap-2 text-gray-400">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span className="text-sm">PepsiCo</span>
-                    </li>
-                    <li className="flex items-center gap-2 text-gray-400">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span className="text-sm">Spotify</span>
-                    </li>
-                    <li className="flex items-center gap-2 text-gray-400">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                      <span className="text-sm">Uber Eats</span>
-                    </li>
-                  </ul>
+                  <h3 className="font-semibold text-lg mb-3">Key Partnerships</h3>
+                  {businessModel.partnerships && businessModel.partnerships.length > 0 ? (
+                    <ul className="space-y-2">
+                      {businessModel.partnerships.map((partnership, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-[#f4ce14] rounded-full mt-1.5"></div>
+                          <div className="flex-1">
+                            <span className="text-sm font-medium">{partnership.partner}</span>
+                            {partnership.partnershipType && (
+                              <p className="text-xs text-muted-foreground">
+                                {formatEnumValue(partnership.partnershipType)}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No partnerships data</p>
+                  )}
                 </div>
 
+                {/* Cost Structure */}
                 <div>
                   <h3 className="font-semibold text-lg mb-3">Cost Structure</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Store Operations</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Supply Chain</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Marketing</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Technology</span>
-                    </li>
-                  </ul>
+                  {businessModel.costStructures && businessModel.costStructures.length > 0 ? (
+                    <ul className="space-y-2">
+                      {businessModel.costStructures.map((cost, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-[#45474b] rounded-full"></div>
+                          <span className="text-sm">{formatEnumValue(cost.cost)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No cost structure data</p>
+                  )}
                 </div>
               </div>
 
+              {/* Value Proposition */}
               {businessModel.valueProp && (
                 <div className="mt-6 pt-6 border-t">
                   <h3 className="font-semibold text-lg mb-2">Value Proposition</h3>
                   <p className="text-sm text-muted-foreground">{businessModel.valueProp}</p>
                 </div>
               )}
+
+              {/* Sales & Acquisition Channels */}
+              <div className="mt-6 pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Sales Channels */}
+                {businessModel.salesChannels && businessModel.salesChannels.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-base mb-3">Sales Channels</h3>
+                    <ul className="space-y-2">
+                      {businessModel.salesChannels.map((channel, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-[#f4ce14] rounded-full"></div>
+                          <span className="text-sm">{formatEnumValue(channel.channel)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Acquisition Channels */}
+                {businessModel.acquisitionChannels && businessModel.acquisitionChannels.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-base mb-3">Customer Acquisition</h3>
+                    <ul className="space-y-2">
+                      {businessModel.acquisitionChannels.map((channel, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-[#379777] rounded-full"></div>
+                          <span className="text-sm">{formatEnumValue(channel.channel)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No business model data available</p>
             </CardContent>
           </Card>
         )}
@@ -368,8 +390,8 @@ function StatCard({ title, icon, value, growth, subtitle }: StatCardProps) {
         {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
         {growth !== undefined && growth !== 0 && (
           <div className="flex items-center gap-1 mt-1">
-            <TrendingUp className={`w-4 h-4 ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-            <span className={`text-xs ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <TrendingUp className={`w-4 h-4 ${growth >= 0 ? 'text-[#379777]' : 'text-red-600'}`} />
+            <span className={`text-xs ${growth >= 0 ? 'text-[#379777]' : 'text-red-600'}`}>
               {growth >= 0 ? '+' : ''}
               {growth.toFixed(1)}%
             </span>
@@ -381,12 +403,24 @@ function StatCard({ title, icon, value, growth, subtitle }: StatCardProps) {
 }
 
 function formatNumber(num: number): string {
+  if (num >= 1000000000) return `${(num / 1000000000).toFixed(1)}B`;
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
   return num.toString();
 }
 
+function formatCurrency(amount: number): string {
+  if (amount >= 1000000000) return `$${(amount / 1000000000).toFixed(1)}B`;
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+  if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
+  if (amount >= 1) return `$${amount.toFixed(0)}M`;
+  return `$${amount.toFixed(0)}`;
+}
+
 function formatEnumValue(value: string): string {
-  return value.split('_').map((word) => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
+  return value
+    .split('_')
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(' ');
 }
 

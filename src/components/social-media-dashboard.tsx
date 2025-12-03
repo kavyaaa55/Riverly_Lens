@@ -1,118 +1,181 @@
+// components/social-media-dashboard.tsx
 'use client';
 
-import { Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Types
-type SerializedFollowerSnapshot = {
-  id: string;
-  socialAccountId: string;
-  date: string;
-  count: number;
+// Fake data for social media
+const fakeFollowerData = {
+  instagram: [
+    { date: '2024-06-01', count: 198500 },
+    { date: '2024-07-01', count: 199200 },
+    { date: '2024-08-01', count: 199800 },
+    { date: '2024-09-01', count: 200300 },
+    { date: '2024-10-01', count: 200900 },
+    { date: '2024-11-01', count: 201500 },
+  ],
+  twitter: [
+    { date: '2024-06-01', count: 145200 },
+    { date: '2024-07-01', count: 145800 },
+    { date: '2024-08-01', count: 146300 },
+    { date: '2024-09-01', count: 146900 },
+    { date: '2024-10-01', count: 147400 },
+    { date: '2024-11-01', count: 148000 },
+  ],
+  facebook: [
+    { date: '2024-06-01', count: 185000 },
+    { date: '2024-07-01', count: 185600 },
+    { date: '2024-08-01', count: 186200 },
+    { date: '2024-09-01', count: 186700 },
+    { date: '2024-10-01', count: 187300 },
+    { date: '2024-11-01', count: 187900 },
+  ],
 };
 
-type SerializedTopPost = {
-  id: string;
-  socialAccountId: string;
-  title: string;
-  link: string;
-  postedAt: string;
-};
+const fakePosts = [
+  {
+    id: '1',
+    platform: 'INSTAGRAM',
+    title: 'New Titan Edge collection - Redefining elegance in watchmaking',
+    postedAt: '2024-11-08T10:30:00Z',
+  },
+  {
+    id: '2',
+    platform: 'FACEBOOK',
+    title: 'Celebrating 40 years of timeless watches and memories',
+    postedAt: '2024-11-07T14:15:00Z',
+  },
+  {
+    id: '3',
+    platform: 'TWITTER',
+    title: 'Sustainability in watchmaking - Our commitment to the environment',
+    postedAt: '2024-11-06T09:45:00Z',
+  },
+  {
+    id: '4',
+    platform: 'INSTAGRAM',
+    title: 'Behind the scenes: Crafting perfection one watch at a time',
+    postedAt: '2024-11-05T16:20:00Z',
+  },
+  {
+    id: '5',
+    platform: 'FACEBOOK',
+    title: 'Limited edition festive collection now available',
+    postedAt: '2024-11-04T11:00:00Z',
+  },
+];
 
-type SocialAccountWithData = {
-  id: string;
-  platform: 'INSTAGRAM' | 'TWITTER' | 'FACEBOOK';
-  followers: number | null;
-  followerSnapshots: SerializedFollowerSnapshot[];
-  topPosts: SerializedTopPost[];
-};
+export function SocialMediaDashboard() {
+  // Build chart data from fake data
+  const chartData = fakeFollowerData.instagram.map((item, index) => ({
+    date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    INSTAGRAM: item.count,
+    TWITTER: fakeFollowerData.twitter[index].count,
+    FACEBOOK: fakeFollowerData.facebook[index].count,
+  }));
 
-type CompanyWithSocial = {
-  socialAccounts: SocialAccountWithData[];
-};
+  const instagramLatest = fakeFollowerData.instagram[fakeFollowerData.instagram.length - 1].count;
+  const instagramPrevious = fakeFollowerData.instagram[fakeFollowerData.instagram.length - 2].count;
+  const instagramGrowth = ((instagramLatest - instagramPrevious) / instagramPrevious) * 100;
 
-interface SocialMediaDashboardProps {
-  company: CompanyWithSocial;
-}
+  const twitterLatest = fakeFollowerData.twitter[fakeFollowerData.twitter.length - 1].count;
+  const twitterPrevious = fakeFollowerData.twitter[fakeFollowerData.twitter.length - 2].count;
+  const twitterGrowth = ((twitterLatest - twitterPrevious) / twitterPrevious) * 100;
 
-// NAMED EXPORT - This is important!
-export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
-  const { socialAccounts } = company;
-
-  const instagramAccount = socialAccounts.find((acc) => acc.platform === 'INSTAGRAM');
-  const twitterAccount = socialAccounts.find((acc) => acc.platform === 'TWITTER');
-  const facebookAccount = socialAccounts.find((acc) => acc.platform === 'FACEBOOK');
-
-  const getLatestFollowerCount = (account: SocialAccountWithData | undefined) => {
-    if (!account) return 0;
-    if (account.followerSnapshots.length === 0) return account.followers || 0;
-
-    // Sort by date and get the latest snapshot
-    const sortedSnapshots = [...account.followerSnapshots].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    console.log(`${account.platform} Latest:`, {
-      date: sortedSnapshots[0].date,
-      count: sortedSnapshots[0].count,
-      allDates: sortedSnapshots.map(s => ({ date: s.date, count: s.count }))
-    });
-
-    return sortedSnapshots[0].count;
-  };
-
-  const calculateGrowth = (snapshots: SerializedFollowerSnapshot[]) => {
-    if (snapshots.length < 2) return 0;
-    const sortedSnapshots = [...snapshots].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    const latest = sortedSnapshots[0].count;
-    const previous = sortedSnapshots[1].count;
-    return ((latest - previous) / previous) * 100;
-  };
+  const facebookLatest = fakeFollowerData.facebook[fakeFollowerData.facebook.length - 1].count;
+  const facebookPrevious = fakeFollowerData.facebook[fakeFollowerData.facebook.length - 2].count;
+  const facebookGrowth = ((facebookLatest - facebookPrevious) / facebookPrevious) * 100;
 
   return (
     <div className="w-full space-y-6 p-6">
       {/* Social Media Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {instagramAccount && (
-          <StatCard
-            platform="Instagram"
-            icon={<Users className="w-5 h-5" />}
-            value={formatNumber(getLatestFollowerCount(instagramAccount))}
-            growth={calculateGrowth(instagramAccount.followerSnapshots)}
-          />
-        )}
-
-        {twitterAccount && (
-          <StatCard
-            platform="Twitter"
-            icon={<Users className="w-5 h-5" />}
-            value={formatNumber(getLatestFollowerCount(twitterAccount))}
-            growth={calculateGrowth(twitterAccount.followerSnapshots)}
-          />
-        )}
-
-        {facebookAccount && (
-          <StatCard
-            platform="Facebook"
-            icon={<Users className="w-5 h-5" />}
-            value={formatNumber(getLatestFollowerCount(facebookAccount))}
-            growth={calculateGrowth(facebookAccount.followerSnapshots)}
-          />
-        )}
+        <StatCard
+          platform="Instagram"
+          icon={<Users className="w-5 h-5" />}
+          value={formatNumber(instagramLatest)}
+          growth={instagramGrowth}
+        />
+        <StatCard
+          platform="Twitter"
+          icon={<Users className="w-5 h-5" />}
+          value={formatNumber(twitterLatest)}
+          growth={twitterGrowth}
+        />
+        <StatCard
+          platform="Facebook"
+          icon={<Users className="w-5 h-5" />}
+          value={formatNumber(facebookLatest)}
+          growth={facebookGrowth}
+        />
       </div>
 
       {/* Follower Growth Trends Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Follower Growth Trends</CardTitle>
-          <CardDescription>Social media follower growth over the last 5 months</CardDescription>
+          <CardDescription>Social media follower growth over the last 6 months</CardDescription>
         </CardHeader>
         <CardContent>
-          <FollowerGrowthChart socialAccounts={socialAccounts} />
+          <div className="w-full h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => formatNumber(value)}
+                  domain={['dataMin - 500', 'dataMax + 500']}
+                  tickCount={8}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                  formatter={(value: number, name: string) => [formatNumber(value), name]}
+                />
+                <Legend />
+                <Line
+                  type="linear"
+                  dataKey="INSTAGRAM"
+                  stroke="#2563eb"
+                  strokeWidth={3}
+                  dot={{ fill: '#2563eb', strokeWidth: 2, stroke: '#fff', r: 5 }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                  name="Instagram"
+                />
+                <Line
+                  type="linear"
+                  dataKey="TWITTER"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ fill: '#10b981', strokeWidth: 2, stroke: '#fff', r: 5 }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                  name="Twitter"
+                />
+                <Line
+                  type="linear"
+                  dataKey="FACEBOOK"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  dot={{ fill: '#f59e0b', strokeWidth: 2, stroke: '#fff', r: 5 }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                  name="Facebook"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
@@ -123,7 +186,11 @@ export function SocialMediaDashboard({ company }: SocialMediaDashboardProps) {
           <CardDescription>Most engaging content from the past week</CardDescription>
         </CardHeader>
         <CardContent>
-          <TopPostsList socialAccounts={socialAccounts} />
+          <div className="space-y-4">
+            {fakePosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -150,11 +217,10 @@ function StatCard({ platform, icon, value, growth }: StatCardProps) {
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         <div className="flex items-center gap-2 mt-2">
-          <TrendingUp
-            className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`}
-          />
+          <TrendingUp className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
           <span className={`text-xs ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {isPositive ? '+' : ''}{growth.toFixed(1)}%
+            {isPositive ? '+' : ''}
+            {growth.toFixed(2)}%
           </span>
         </div>
       </CardContent>
@@ -162,168 +228,8 @@ function StatCard({ platform, icon, value, growth }: StatCardProps) {
   );
 }
 
-// Improved Follower Growth Chart Component
-function FollowerGrowthChart({ socialAccounts }: { socialAccounts: SocialAccountWithData[] }) {
-  // Prepare chart data
-  const dateSet = new Set<string>();
-
-  // Collect all unique dates
-  socialAccounts.forEach((account) => {
-    account.followerSnapshots.forEach((snapshot) => {
-      dateSet.add(snapshot.date);
-    });
-  });
-
-  // Sort dates
-  const sortedDates = Array.from(dateSet).sort();
-
-  // Build chart data
-  const chartData = sortedDates.map((date) => {
-    const dataPoint: any = {
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      fullDate: date,
-    };
-
-    socialAccounts.forEach((account) => {
-      const snapshot = account.followerSnapshots.find((s) => s.date === date);
-      if (snapshot) {
-        dataPoint[account.platform] = snapshot.count;
-      }
-    });
-
-    return dataPoint;
-  });
-
-  if (chartData.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-        No follower data available
-      </div>
-    );
-  }
-
-  const platformColors: Record<string, string> = {
-    INSTAGRAM: 'hsl(var(--chart-1))',
-    TWITTER: 'hsl(var(--chart-2))',
-    FACEBOOK: 'hsl(var(--chart-3))',
-  };
-
-  const platformLabels: Record<string, string> = {
-    INSTAGRAM: 'Instagram',
-    TWITTER: 'Twitter',
-    FACEBOOK: 'Facebook',
-  };
-
-  return (
-    <div className="w-full h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="date"
-            className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-          />
-          <YAxis
-            className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            tickFormatter={(value) => formatNumber(value)}
-          />
-          <Tooltip
-            content={({ active, payload, label }) => {
-              if (!active || !payload || !payload.length) return null;
-
-              return (
-                <div className="rounded-lg border bg-background p-2 shadow-md">
-                  <div className="grid gap-2">
-                    <div className="flex flex-col">
-                      <span className="text-[0.70rem] uppercase text-muted-foreground">
-                        {label}
-                      </span>
-                    </div>
-                    {payload.map((entry: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between gap-8">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: entry.color }}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {platformLabels[entry.dataKey] || entry.dataKey}
-                          </span>
-                        </div>
-                        <span className="text-sm font-bold">
-                          {formatNumber(entry.value)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            }}
-          />
-          <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-            formatter={(value) => platformLabels[value] || value}
-            iconType="line"
-          />
-          {socialAccounts.map((account, index) => {
-            const colors = ['#2563eb', '#10b981', '#f59e0b'];
-            return (
-              <Line
-                key={account.id}
-                type="linear"
-                dataKey={account.platform}
-                stroke={colors[index % colors.length]}
-                strokeWidth={3}
-                dot={{ fill: colors[index % colors.length], strokeWidth: 2, stroke: '#fff', r: 5 }}
-                activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
-                animationDuration={1000}
-                connectNulls={true}
-              />
-            );
-          })}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-// Top Posts List Component
-function TopPostsList({ socialAccounts }: { socialAccounts: SocialAccountWithData[] }) {
-  const allPosts: Array<{ post: SerializedTopPost; platform: string }> = [];
-
-  socialAccounts.forEach((account) => {
-    account.topPosts.forEach((post) => {
-      allPosts.push({ post, platform: account.platform });
-    });
-  });
-
-  allPosts.sort((a, b) => new Date(b.post.postedAt).getTime() - new Date(a.post.postedAt).getTime());
-
-  if (allPosts.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-        No posts available
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {allPosts.slice(0, 10).map(({ post, platform }) => (
-        <PostCard key={post.id} post={post} platform={platform} />
-      ))}
-    </div>
-  );
-}
-
 // Post Card Component
-function PostCard({ post, platform }: { post: SerializedTopPost; platform: string }) {
+function PostCard({ post }: { post: any }) {
   const timeAgo = getTimeAgo(new Date(post.postedAt));
 
   return (
@@ -332,22 +238,22 @@ function PostCard({ post, platform }: { post: SerializedTopPost; platform: strin
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary">{platform}</Badge>
+              <Badge variant="secondary">{post.platform}</Badge>
               <span className="text-sm text-muted-foreground">{timeAgo}</span>
             </div>
             <p className="text-sm text-foreground mb-3">{post.title}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <span>❤️</span>
-                <span>125K</span>
+                <span>12.5K</span>
               </div>
               <div className="flex items-center gap-1">
                 <span>💬</span>
-                <span>3.2K</span>
+                <span>850</span>
               </div>
               <div className="flex items-center gap-1">
                 <span>🔗</span>
-                <span>892</span>
+                <span>420</span>
               </div>
             </div>
           </div>
@@ -368,10 +274,6 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-function formatCurrency(num: number): string {
-  return `$${(num / 1000000000).toFixed(1)}B`;
-}
-
 function getTimeAgo(date: Date): string {
   const now = new Date();
   const diffInMs = now.getTime() - date.getTime();
@@ -384,3 +286,4 @@ function getTimeAgo(date: Date): string {
   if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
   return `${Math.floor(diffInDays / 30)} months ago`;
 }
+
