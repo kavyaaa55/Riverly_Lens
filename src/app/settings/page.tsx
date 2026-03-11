@@ -150,7 +150,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Tracked Companies</CardTitle>
-                  <CardDescription>Manage the companies you're monitoring</CardDescription>
+                  <CardDescription>Manage the companies you&apos;re monitoring</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

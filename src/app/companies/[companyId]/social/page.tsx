@@ -4,13 +4,13 @@ import { SocialMediaDashboard } from '@/components/social-media-dashboard';
 import { notFound } from 'next/navigation';
 
 interface SocialMediaPageProps {
-  params: {
+  params: Promise<{
     companyId: string;
-  };
+  }>;
 }
 
 export default async function SocialMediaPage({ params }: SocialMediaPageProps) {
-  const { companyId } = params;
+  const { companyId } = await params;
 
   // Fetch company with social accounts
   const company = await prisma.company.findUnique({
@@ -35,6 +35,6 @@ export default async function SocialMediaPage({ params }: SocialMediaPageProps) 
     notFound();
   }
 
-  return <SocialMediaDashboard company={company} />;
+  return <SocialMediaDashboard />;
 }
 

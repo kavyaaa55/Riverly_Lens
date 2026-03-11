@@ -1,7 +1,16 @@
 // Priority Queue Implementation for News Sorting
+
+interface NewsItemData {
+  title?: string;
+  content?: string;
+  date: string | Date;
+  category?: string;
+  [key: string]: unknown;
+}
+
 export class NewsItem {
   constructor(
-    public element: any,
+    public element: NewsItemData,
     public priority: number,
     public recencyScore: number
   ) { }
@@ -10,7 +19,7 @@ export class NewsItem {
 export class NewsPriorityQueue {
   private items: NewsItem[] = [];
 
-  enqueue(newsItem: any, priorityLevel: number = 1) {
+  enqueue(newsItem: NewsItemData, priorityLevel: number = 1) {
     const now = new Date();
     const newsDate = new Date(newsItem.date);
     const daysDiff = Math.floor((now.getTime() - newsDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -24,10 +33,10 @@ export class NewsPriorityQueue {
     // Add priority based on importance keywords
     const importanceKeywords = ['breaking', 'urgent', 'exclusive', 'major', 'significant'];
     const title = (newsItem.title || '').toLowerCase();
-    const content = (newsItem.content || '').toLowerCase();
+    // const content = (newsItem.content || '').toLowerCase();
 
     for (const keyword of importanceKeywords) {
-      if (title.includes(keyword) || content.includes(keyword)) {
+      if (title.includes(keyword)) {
         combinedPriority += 20; // Boost priority for important news
         break;
       }
@@ -53,12 +62,12 @@ export class NewsPriorityQueue {
     }
   }
 
-  dequeue(): any | null {
+  dequeue(): NewsItemData | null {
     if (this.isEmpty()) return null;
     return this.items.shift()?.element || null;
   }
 
-  front(): any | null {
+  front(): NewsItemData | null {
     if (this.isEmpty()) return null;
     return this.items[0].element;
   }
@@ -71,7 +80,7 @@ export class NewsPriorityQueue {
     return this.items.length;
   }
 
-  toSortedArray(): any[] {
+  toSortedArray(): NewsItemData[] {
     return this.items.map(item => item.element);
   }
 
@@ -81,7 +90,7 @@ export class NewsPriorityQueue {
 }
 
 // Main function to sort news by priority
-export function sortNewsByPriority(newsArray: any[]): any[] {
+export function sortNewsByPriority(newsArray: NewsItemData[]): NewsItemData[] {
   const newsQueue = new NewsPriorityQueue();
 
   // Add all news items to priority queue
@@ -102,7 +111,7 @@ export function sortNewsByPriority(newsArray: any[]): any[] {
 }
 
 // Additional utility functions for news processing
-export function categorizeNews(newsItem: any): string {
+export function categorizeNews(newsItem: NewsItemData): string {
   const title = (newsItem.title || '').toLowerCase();
   const content = (newsItem.content || '').toLowerCase();
 
@@ -121,7 +130,7 @@ export function categorizeNews(newsItem: any): string {
   return 'general';
 }
 
-export function calculateNewsImpact(newsItem: any): 'Low' | 'Medium' | 'High' {
+export function calculateNewsImpact(newsItem: NewsItemData): 'Low' | 'Medium' | 'High' {
   const highImpactKeywords = ['breaking', 'major', 'significant', 'critical'];
   const mediumImpactKeywords = ['important', 'notable', 'substantial'];
 

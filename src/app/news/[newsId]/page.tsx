@@ -253,7 +253,7 @@ export default function NewsDetailPage() {
                 <li className="flex items-start gap-2">
                   <span className="text-green-600 mt-1">•</span>
                   <span>
-                    This report provides AI-generated insights into {reportData.company.name}'s
+                    This report provides AI-generated insights into {reportData.company.name}&apos;s
                     market position and recent activities.
                   </span>
                 </li>

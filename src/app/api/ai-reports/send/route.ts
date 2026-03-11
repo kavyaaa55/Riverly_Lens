@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+// import { Resend } from 'resend';
 
 // Initialize Resend with API key from environment variables
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Fake/Demo API endpoint for sending AI-generated reports via email
@@ -154,17 +154,18 @@ export async function POST(request: NextRequest) {
         `;
 
         // Send email using Resend
-        const data = await resend.emails.send({
-            from: 'RivalryLens AI <reports@rivalrylens.com>',
-            to: [userEmail],
-            subject: `📊 Your 3-Day AI Market Intelligence Report - ${new Date().toLocaleDateString()}`,
-            html: emailHtml,
-        });
+        // TODO: Install 'resend' package to enable email functionality
+        // const data = await resend.emails.send({
+        //     from: 'RivalryLens AI <reports@rivalrylens.com>',
+        //     to: [userEmail],
+        //     subject: `📊 Your 3-Day AI Market Intelligence Report - ${new Date().toLocaleDateString()}`,
+        //     html: emailHtml,
+        // });
 
         return NextResponse.json({
             success: true,
-            message: 'AI report email sent successfully',
-            emailId: data.id,
+            message: 'AI report email sent successfully (demo mode - install resend package)',
+            emailId: 'demo-' + Date.now(),
             reportData: reportData,
         });
 

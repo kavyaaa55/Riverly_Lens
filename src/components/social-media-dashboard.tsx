@@ -229,7 +229,7 @@ function StatCard({ platform, icon, value, growth }: StatCardProps) {
 }
 
 // Post Card Component
-function PostCard({ post }: { post: any }) {
+function PostCard({ post }: { post: { id: string; platform: string; title: string; postedAt: string } }) {
   const timeAgo = getTimeAgo(new Date(post.postedAt));
 
   return (

@@ -56,8 +56,22 @@ interface DashboardData {
     totalRevenueBillion: string
   }
   userCompanies: TrackedCompany[]
-  recentNews: any[]
-  todaysHotTopic: any
+  recentNews: Array<{
+    id: string
+    title: string
+    publishedAt: string
+    source: string
+    url: string
+    summary?: string
+    company?: {
+      id: string
+      name: string
+    }
+  }>
+  todaysHotTopic: {
+    topic: string
+    description: string
+  } | null
 }
 
 export default function DashboardPage() {
@@ -214,16 +228,18 @@ export default function DashboardPage() {
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel>Today's Hot Topic</SidebarGroupLabel>
+              <SidebarGroupLabel>Today&apos;s Hot Topic</SidebarGroupLabel>
               <SidebarGroupContent>
                 <Card className="m-2">
                   <CardContent className="p-3">
                     <div className="flex items-start space-x-2">
                       <Bell className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-sm font-medium line-clamp-2">{todaysNews.title}</h4>
+                        <h4 className="text-sm font-medium line-clamp-2">
+                          {'title' in todaysNews ? todaysNews.title : todaysNews.topic}
+                        </h4>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {todaysNews.summary || todaysNews.company?.name}
+                          {'summary' in todaysNews ? todaysNews.summary : todaysNews.description}
                         </p>
                       </div>
                     </div>
@@ -341,22 +357,24 @@ export default function DashboardPage() {
                             <div className="w-2 h-2 bg-teal-600 rounded-full mt-2 flex-shrink-0"></div>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-black truncate">{news.title}</p>
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{news.summary}</p>
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{news.summary || 'No summary available'}</p>
                               <p className="text-xs text-gray-400 mt-1">
-                                {news.company.name} • {new Date(news.publishedAt).toLocaleString()}
+                                {news.company?.name || news.source} • {new Date(news.publishedAt).toLocaleString()}
                               </p>
                             </div>
                           </div>
-                          <Link href={`/companies/${news.company.id}/news`}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-teal-600 border-teal-600 hover:bg-teal-50 bg-transparent ml-4 flex-shrink-0"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Read
-                            </Button>
-                          </Link>
+                          {news.company && (
+                            <Link href={`/companies/${news.company.id}/news`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-teal-600 border-teal-600 hover:bg-teal-50 bg-transparent ml-4 flex-shrink-0"
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Read
+                              </Button>
+                            </Link>
+                          )}
                         </div>
                       ))
                     ) : (

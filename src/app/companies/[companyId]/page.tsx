@@ -61,6 +61,14 @@ export default async function OverviewPage({ params, searchParams }: OverviewPag
   // Serialize company data
   const serializedCompany = {
     ...company,
+    businessModel: company.businessModel ? {
+      ...company.businessModel,
+      revenueStreams: company.businessModel.revenueStreams.map(rs => ({ stream: rs.stream })),
+      salesChannels: company.businessModel.salesChannels.map(sc => ({ channel: sc.channel })),
+      acquisitionChannels: company.businessModel.acquisitionChannels.map(ac => ({ channel: ac.channel })),
+      costStructures: [],
+      partnerships: [],
+    } : null,
     revenueRecords: company.revenueRecords.map((record) => ({
       ...record,
       periodStart: record.periodStart.toISOString(),

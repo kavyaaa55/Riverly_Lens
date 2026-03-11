@@ -267,7 +267,7 @@ export default function DashboardPage() {
 
             {todaysNewsItem && (
               <SidebarGroup>
-                <SidebarGroupLabel>Today's Hot Topic</SidebarGroupLabel>
+                <SidebarGroupLabel>Today&apos;s Hot Topic</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <Card className="m-2">
                     <CardContent className="p-3">

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+// import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function ModeToggle() {
-  const { setTheme } = useTheme()
+  // const { setTheme } = useTheme()
+  const setTheme = (theme: string) => {
+    // TODO: Install 'next-themes' package to enable theme switching
+    console.log('Theme change requested:', theme);
+  };
 
   return (
     <DropdownMenu>

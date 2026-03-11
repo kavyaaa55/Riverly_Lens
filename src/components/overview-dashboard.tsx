@@ -253,7 +253,7 @@ export default function OverviewDashboard({ company, initialIsTracking = false }
           <Card>
             <CardHeader>
               <CardTitle>Business Model Overview</CardTitle>
-              <CardDescription>Key components of {company.name}'s business strategy</CardDescription>
+              <CardDescription>Key components of {company.name}&apos;s business strategy</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
